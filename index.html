@@ -1,4 +1,4 @@
-
+<!DOCTYPE html>
 <html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
@@ -11,6 +11,8 @@
             --success: #27ae60;
             --danger: #e74c3c;
             --warning: #f39c12;
+            --light: #ecf0f1;
+            --dark: #2c3e50;
         }
         * {
             margin: 0;
@@ -66,7 +68,7 @@
             padding: 20px;
             margin-bottom: 20px;
         }
-        h1, h2 {
+        h1, h2, h3 {
             margin-bottom: 15px;
             color: var(--primary);
         }
@@ -77,6 +79,7 @@
             cursor: pointer;
             font-weight: bold;
             transition: all 0.3s;
+            margin: 2px;
         }
         .btn-primary {
             background-color: var(--secondary);
@@ -90,9 +93,27 @@
             background-color: var(--danger);
             color: white;
         }
+        .btn-warning {
+            background-color: var(--warning);
+            color: white;
+        }
         .btn:hover {
             opacity: 0.9;
             transform: translateY(-2px);
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 20px;
+        }
+        table th, table td {
+            padding: 10px;
+            text-align: left;
+            border-bottom: 1px solid #ddd;
+        }
+        table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
         }
         .form-group {
             margin-bottom: 15px;
@@ -107,6 +128,14 @@
             padding: 8px 10px;
             border: 1px solid #ddd;
             border-radius: 4px;
+            font-size: 14px;
+        }
+        .form-row {
+            display: flex;
+            gap: 15px;
+        }
+        .form-row .form-group {
+            flex: 1;
         }
         .section {
             display: none;
@@ -122,31 +151,12 @@
         .alert-success {
             background-color: #d4edda;
             color: #155724;
+            border: 1px solid #c3e6cb;
         }
         .alert-danger {
             background-color: #f8d7da;
             color: #721c24;
-        }
-        .hidden {
-            display: none;
-        }
-        .loading {
-            text-align: center;
-            padding: 20px;
-            color: var(--secondary);
-        }
-        table {
-            width: 100%;
-            border-collapse: collapse;
-        }
-        th, td {
-            padding: 10px;
-            text-align: left;
-            border-bottom: 1px solid #ddd;
-        }
-        th {
-            background-color: #f8f9fa;
-            font-weight: bold;
+            border: 1px solid #f5c6cb;
         }
         .dashboard-stats {
             display: grid;
@@ -170,6 +180,50 @@
             font-size: 14px;
             color: #777;
         }
+        .hidden {
+            display: none;
+        }
+        .loading {
+            text-align: center;
+            padding: 20px;
+            color: #777;
+        }
+        .badge {
+            display: inline-block;
+            padding: 3px 8px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: bold;
+        }
+        .badge-success { background-color: var(--success); color: white; }
+        .badge-warning { background-color: var(--warning); color: white; }
+        .badge-danger { background-color: var(--danger); color: white; }
+        .badge-info { background-color: var(--secondary); color: white; }
+        .status-indicator {
+            display: inline-block;
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            margin-right: 5px;
+        }
+        .status-ok { background-color: var(--success); }
+        .status-error { background-color: var(--danger); }
+        .firebase-status {
+            padding: 10px;
+            border-radius: 4px;
+            margin: 10px 0;
+            font-weight: bold;
+        }
+        .firebase-connected { 
+            background-color: #d4edda; 
+            color: #155724; 
+            border: 1px solid #c3e6cb;
+        }
+        .firebase-disconnected { 
+            background-color: #f8d7da; 
+            color: #721c24; 
+            border: 1px solid #f5c6cb;
+        }
     </style>
 </head>
 <body>
@@ -177,10 +231,10 @@
         <div class="container header-content">
             <div class="logo">Sistema Restaurante</div>
             <nav>
-                <ul>
+                <ul id="navMenu">
                     <li><a href="#" class="nav-link active" data-section="dashboard">Dashboard</a></li>
-                    <li><a href="#" class="nav-link" data-section="produtos">Produtos</a></li>
                     <li><a href="#" class="nav-link" data-section="comandas">Comandas</a></li>
+                    <li><a href="#" class="nav-link" data-section="produtos">Produtos</a></li>
                     <li><a href="#" class="nav-link" data-section="relatorios">Relatórios</a></li>
                     <li><a href="#" class="nav-link" data-section="configuracoes">Configurações</a></li>
                 </ul>
@@ -192,6 +246,13 @@
         <!-- Dashboard -->
         <section id="dashboard" class="section active">
             <h1>Dashboard</h1>
+
+            <!-- Status do Firebase -->
+            <div id="firebase-status" class="firebase-status firebase-disconnected">
+                <span class="status-indicator status-error"></span>
+                <span id="firebase-status-text">Conectando ao Firebase...</span>
+            </div>
+
             <div class="dashboard-stats">
                 <div class="stat-card">
                     <div class="stat-value" id="total-vendas">R$ 0,00</div>
@@ -205,6 +266,33 @@
                     <div class="stat-value" id="total-produtos">0</div>
                     <div class="stat-label">Produtos Cadastrados</div>
                 </div>
+                <div class="stat-card">
+                    <div class="stat-value" id="vendas-hoje">0</div>
+                    <div class="stat-label">Vendas Hoje</div>
+                </div>
+            </div>
+
+            <div class="loading hidden" id="loading-dashboard">
+                <p>Carregando dados do Firebase...</p>
+            </div>
+        </section>
+
+        <!-- Comandas -->
+        <section id="comandas" class="section">
+            <h1>Gerenciar Comandas</h1>
+            <div class="card">
+                <div class="alert alert-success hidden" id="comanda-success"></div>
+                <div class="alert alert-danger hidden" id="comanda-error"></div>
+                <div class="form-group">
+                    <label for="cliente">Nome do Cliente</label>
+                    <input type="text" id="cliente" placeholder="Nome do cliente">
+                </div>
+                <button class="btn btn-primary" id="criar-comanda">Criar Nova Comanda</button>
+            </div>
+            <div class="card">
+                <h2>Comandas Ativas</h2>
+                <div id="loading-comandas" class="loading hidden">Carregando comandas...</div>
+                <div id="comandas-lista"></div>
             </div>
         </section>
 
@@ -214,32 +302,46 @@
             <div class="card">
                 <div class="alert alert-success hidden" id="produto-success"></div>
                 <div class="alert alert-danger hidden" id="produto-error"></div>
-                <div class="form-group">
-                    <label>Nome do Produto</label>
-                    <input type="text" id="nome-produto">
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="nome-produto">Nome do Produto</label>
+                        <input type="text" id="nome-produto" placeholder="Nome do produto">
+                    </div>
+                    <div class="form-group">
+                        <label for="categoria">Categoria</label>
+                        <select id="categoria">
+                            <option value="">Selecione uma categoria</option>
+                            <option value="Espeto">Espeto</option>
+                            <option value="Copos">Copos</option>
+                            <option value="Bebidas">Bebidas</option>
+                            <option value="Facas">Facas</option>
+                            <option value="Itens para Churrasco">Itens para Churrasco</option>
+                            <option value="Espeto Congelado">Espeto Congelado</option>
+                        </select>
+                    </div>
                 </div>
-                <div class="form-group">
-                    <label>Categoria</label>
-                    <select id="categoria">
-                        <option value="">Selecione</option>
-                        <option value="Espeto">Espeto</option>
-                        <option value="Bebidas">Bebidas</option>
-                        <option value="Copos">Copos</option>
-                    </select>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="preco">Preço (R$)</label>
+                        <input type="number" id="preco" min="0" step="0.01" placeholder="Preço do produto">
+                    </div>
+                    <div class="form-group">
+                        <label for="descricao">Descrição</label>
+                        <textarea id="descricao" rows="3" placeholder="Descrição do produto"></textarea>
+                    </div>
                 </div>
-                <div class="form-group">
-                    <label>Preço (R$)</label>
-                    <input type="number" id="preco" step="0.01">
+                <div class="form-row">
+                    <div class="form-group">
+                        <button class="btn btn-primary" id="adicionar-produto">Adicionar Produto</button>
+                    </div>
+                    <div class="form-group">
+                        <button class="btn btn-warning hidden" id="cancelar-edicao">Cancelar Edição</button>
+                    </div>
                 </div>
-                <div class="form-group">
-                    <label>Descrição</label>
-                    <textarea id="descricao" rows="3"></textarea>
-                </div>
-                <button class="btn btn-primary" id="adicionar-produto">Adicionar Produto</button>
             </div>
             <div class="card">
                 <h2>Produtos Cadastrados</h2>
-                <div id="loading-produtos" class="loading hidden">Carregando...</div>
+                <div id="loading-produtos" class="loading hidden">Carregando produtos...</div>
                 <table id="tabela-produtos">
                     <thead>
                         <tr>
@@ -254,48 +356,33 @@
             </div>
         </section>
 
-        <!-- Comandas -->
-        <section id="comandas" class="section">
-            <h1>Gerenciar Comandas</h1>
-            <div class="card">
-                <div class="alert alert-success hidden" id="comanda-success"></div>
-                <div class="form-group">
-                    <label>Nome do Cliente</label>
-                    <input type="text" id="cliente">
-                </div>
-                <button class="btn btn-primary" id="criar-comanda">Criar Nova Comanda</button>
-            </div>
-            <div class="card">
-                <h2>Comandas Ativas</h2>
-                <div id="loading-comandas" class="loading hidden">Carregando...</div>
-                <div id="comandas-lista"></div>
-            </div>
-        </section>
-
         <!-- Relatórios -->
         <section id="relatorios" class="section">
             <h1>Relatórios de Vendas</h1>
             <div class="card">
-                <div class="form-group">
-                    <label>Data Início</label>
-                    <input type="date" id="data-inicio">
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="data-inicio">Data Início</label>
+                        <input type="date" id="data-inicio">
+                    </div>
+                    <div class="form-group">
+                        <label for="data-fim">Data Fim</label>
+                        <input type="date" id="data-fim">
+                    </div>
                 </div>
-                <div class="form-group">
-                    <label>Data Fim</label>
-                    <input type="date" id="data-fim">
-                </div>
-                <button class="btn btn-primary" id="filtrar-relatorio">Filtrar</button>
+                <button class="btn btn-primary" id="filtrar-relatorio">Filtrar Relatório</button>
             </div>
             <div class="card">
-                <h2>Vendas</h2>
-                <div id="loading-vendas" class="loading hidden">Carregando...</div>
+                <h2>Vendas Realizadas</h2>
+                <div id="loading-vendas" class="loading hidden">Carregando vendas...</div>
                 <table id="tabela-vendas">
                     <thead>
                         <tr>
                             <th>Data</th>
                             <th>Cliente</th>
                             <th>Total</th>
-                            <th>Pagamento</th>
+                            <th>Forma Pagamento</th>
+                            <th>Detalhes</th>
                         </tr>
                     </thead>
                     <tbody></tbody>
@@ -307,339 +394,772 @@
         <section id="configuracoes" class="section">
             <h1>Configurações</h1>
             <div class="card">
-                <div class="alert alert-success hidden" id="config-success"></div>
-                <div class="form-group">
-                    <label>URL do Google Apps Script</label>
-                    <input type="text" id="sheets-url" placeholder="https://script.google.com/macros/s/...">
-                    <small>Cole aqui a URL de implantação do seu Google Apps Script</small>
-                </div>
-                <button class="btn btn-primary" id="salvar-config">Salvar Configurações</button>
-                <button class="btn btn-success" id="testar-conexao">Testar Conexão</button>
+                <h2>Configurações do Firebase</h2>
+                <p>Suas credenciais do Firebase estão integradas diretamente no código HTML.</p>
+                <p>Para alterar, edite o objeto <code>firebaseConfig</code> no script.</p>
+                <p>Certifique-se de que as regras de segurança do Firestore permitam leitura e escrita para usuários autenticados ou em modo de teste.</p>
             </div>
         </section>
     </div>
 
+    <!-- Firebase SDKs -->
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
     <script>
-        // Variável global para a URL do Google Apps Script
-        let SCRIPT_URL = '';
+        // =================================================================================
+        // ATENÇÃO: SUBSTITUA ESTE OBJETO firebaseConfig PELAS SUAS CREDENCIAIS REAIS DO FIREBASE!
+        // Você as encontra no Console do Firebase > Configurações do Projeto > Seus apps > Web
+        // =================================================================================
+        const firebaseConfig = {
+            apiKey: "YOUR_API_KEY", // Ex: "AIzaSyC_YOUR_API_KEY"
+            authDomain: "YOUR_PROJECT_ID.firebaseapp.com", // Ex: "coiote-da379.firebaseapp.com"
+            projectId: "YOUR_PROJECT_ID", // Ex: "coiote-da379"
+            storageBucket: "YOUR_PROJECT_ID.appspot.com", // Ex: "coiote-da379.appspot.com"
+            messagingSenderId: "YOUR_MESSAGING_SENDER_ID", // Ex: "26671388328"
+            appId: "YOUR_APP_ID", // Ex: "1:26671388328:web:07206261e0055f5d3c549d"
+            measurementId: "YOUR_MEASUREMENT_ID" // Ex: "G-SV3L4D2FXL"
+        };
 
-        // Carregar configuração ao iniciar
-        function carregarConfig() {
-            const config = localStorage.getItem('sheetsConfig');
-            if (config) {
-                const { sheetsUrl } = JSON.parse(config);
-                SCRIPT_URL = sheetsUrl;
-                document.getElementById('sheets-url').value = sheetsUrl;
+        // Inicializa o Firebase
+        let app;
+        let db;
+        let firebaseConnected = false;
+
+        // Importa as funções do Firestore
+        const { initializeApp } = firebase;
+        const { getFirestore, collection, addDoc, getDocs, deleteDoc, doc, query, where, orderBy, updateDoc } = firebase.firestore;
+
+        // Variável para armazenar o ID da comanda atualmente aberta no modal (se você for implementar um modal)
+        let comandaAtualId = null;
+
+        // ========== FUNÇÕES DE INICIALIZAÇÃO E CONEXÃO FIREBASE ==========
+        async function initializeFirebase() {
+            try {
+                app = initializeApp(firebaseConfig);
+                db = getFirestore(app);
+
+                // Testar conexão com Firestore
+                await testarConexaoFirebase();
+                firebaseConnected = true;
+                atualizarStatusFirebase(true, 'Conectado ao Firebase Firestore!');
+
+                // Carregar dados iniciais após a conexão
+                carregarDadosIniciais();
+
+            } catch (error) {
+                console.error('Erro ao inicializar Firebase:', error);
+                atualizarStatusFirebase(false, 'Erro ao conectar: ' + error.message);
+                firebaseConnected = false;
             }
         }
 
-        // Salvar configuração
-        document.getElementById('salvar-config').addEventListener('click', function() {
-            const sheetsUrl = document.getElementById('sheets-url').value.trim();
-            if (!sheetsUrl) {
-                alert('Por favor, insira a URL do Google Apps Script');
-                return;
-            }
-            localStorage.setItem('sheetsConfig', JSON.stringify({ sheetsUrl }));
-            SCRIPT_URL = sheetsUrl;
-            mostrarAlerta('config-success', 'Configurações salvas com sucesso!');
-        });
-
-        // Testar conexão
-        document.getElementById('testar-conexao').addEventListener('click', async function() {
-            if (!SCRIPT_URL) {
-                alert('Configure a URL primeiro');
-                return;
-            }
+        async function testarConexaoFirebase() {
             try {
-                const response = await fetch(`${SCRIPT_URL}?acao=testar`);
-                const data = await response.json();
-                if (data.sucesso) {
-                    alert('✅ Conexão estabelecida com sucesso!');
-                } else {
-                    alert('❌ Erro na conexão: ' + data.mensagem);
-                }
+                // Tenta listar produtos para verificar a conexão e permissões
+                const produtosRef = collection(db, 'produtos');
+                await getDocs(produtosRef); // Apenas tenta buscar, não precisa dos dados
+                return true;
             } catch (error) {
-                alert('❌ Erro ao conectar: ' + error.message);
+                throw error; // Propaga o erro para ser tratado na inicialização
             }
-        });
+        }
 
-        // ========== PRODUTOS ==========
+        function atualizarStatusFirebase(conectado, mensagem) {
+            const statusDiv = document.getElementById('firebase-status');
+            const statusText = document.getElementById('firebase-status-text');
+            const indicator = statusDiv.querySelector('.status-indicator');
+
+            statusText.textContent = mensagem;
+            indicator.className = 'status-indicator ' + (conectado ? 'status-ok' : 'status-error');
+            statusDiv.className = 'firebase-status ' + (conectado ? 'firebase-connected' : 'firebase-disconnected');
+        }
+
+        async function carregarDadosIniciais() {
+            await carregarProdutos();
+            await carregarComandas();
+            await atualizarDashboard();
+            await carregarVendas(); // Carrega vendas para a aba de relatórios
+        }
+
+        // ========== FUNÇÕES DE PRODUTOS ==========
         document.getElementById('adicionar-produto').addEventListener('click', async function() {
-            if (!SCRIPT_URL) {
-                alert('Configure a URL do Google Apps Script primeiro');
+            const nome = document.getElementById('nome-produto').value.trim();
+            const categoria = document.getElementById('categoria').value;
+            const preco = parseFloat(document.getElementById('preco').value);
+            const descricao = document.getElementById('descricao').value.trim();
+
+            if (!nome || !categoria || isNaN(preco) || preco <= 0) {
+                mostrarAlerta('produto-error', 'Preencha todos os campos corretamente');
                 return;
             }
 
-            const produto = {
-                nome: document.getElementById('nome-produto').value,
-                categoria: document.getElementById('categoria').value,
-                preco: parseFloat(document.getElementById('preco').value),
-                descricao: document.getElementById('descricao').value
-            };
-
-            if (!produto.nome || !produto.categoria || !produto.preco) {
-                alert('Preencha todos os campos obrigatórios');
+            if (!firebaseConnected) {
+                mostrarAlerta('produto-error', 'Firebase não conectado. Verifique o status.');
                 return;
             }
 
             try {
-                const response = await fetch(SCRIPT_URL, {
-                    method: 'POST',
-                    body: JSON.stringify({ acao: 'salvarProduto', produto })
-                });
-                const data = await response.json();
+                mostrarAlerta('produto-success', 'Salvando produto...');
 
-                if (data.sucesso) {
-                    mostrarAlerta('produto-success', 'Produto salvo com sucesso!');
-                    document.getElementById('nome-produto').value = '';
-                    document.getElementById('categoria').value = '';
-                    document.getElementById('preco').value = '';
-                    document.getElementById('descricao').value = '';
-                    carregarProdutos();
-                } else {
-                    mostrarAlerta('produto-error', 'Erro: ' + data.mensagem);
-                }
+                const produto = {
+                    nome,
+                    categoria,
+                    preco,
+                    descricao,
+                    dataCadastro: new Date().toISOString()
+                };
+
+                await addDoc(collection(db, 'produtos'), produto);
+
+                mostrarAlerta('produto-success', 'Produto adicionado com sucesso!');
+
+                // Limpar formulário
+                document.getElementById('nome-produto').value = '';
+                document.getElementById('categoria').value = '';
+                document.getElementById('preco').value = '';
+                document.getElementById('descricao').value = '';
+
+                // Recarregar lista e dashboard
+                await carregarProdutos();
+                await atualizarDashboard();
+
             } catch (error) {
+                console.error('Erro ao adicionar produto:', error);
                 mostrarAlerta('produto-error', 'Erro ao salvar: ' + error.message);
             }
         });
 
         async function carregarProdutos() {
-            if (!SCRIPT_URL) return;
+            if (!firebaseConnected) {
+                document.getElementById('loading-produtos').textContent = 'Firebase não conectado';
+                return;
+            }
 
-            document.getElementById('loading-produtos').classList.remove('hidden');
+            const loadingDiv = document.getElementById('loading-produtos');
+            loadingDiv.classList.remove('hidden');
+            loadingDiv.textContent = 'Carregando produtos...';
+
             try {
-                const response = await fetch(`${SCRIPT_URL}?acao=listarProdutos`);
-                const data = await response.json();
+                const produtosRef = collection(db, 'produtos');
+                const snapshot = await getDocs(produtosRef);
 
                 const tbody = document.querySelector('#tabela-produtos tbody');
                 tbody.innerHTML = '';
 
-                if (data.produtos && data.produtos.length > 0) {
-                    data.produtos.forEach(produto => {
-                        const tr = document.createElement('tr');
-                        tr.innerHTML = `
-                            <td>${produto.nome}</td>
-                            <td>${produto.categoria}</td>
-                            <td>R$ ${produto.preco.toFixed(2)}</td>
-                            <td>
-                                <button class="btn btn-danger" onclick="excluirProduto('${produto.id}')">Excluir</button>
-                            </td>
-                        `;
-                        tbody.appendChild(tr);
-                    });
+                if (snapshot.empty) {
+                    tbody.innerHTML = '<tr><td colspan="4" style="text-align:center">Nenhum produto cadastrado</td></tr>';
+                    document.getElementById('total-produtos').textContent = '0';
+                    return;
                 }
+
+                let totalProdutos = 0;
+                snapshot.forEach(doc => {
+                    const produto = doc.data();
+                    produto.id = doc.id; // Adiciona o ID do documento ao objeto produto
+
+                    const tr = document.createElement('tr');
+                    tr.innerHTML = `
+                        <td>${produto.nome}</td>
+                        <td>${produto.categoria}</td>
+                        <td>R$ ${produto.preco.toFixed(2)}</td>
+                        <td>
+                            <button class="btn btn-danger" onclick="excluirProduto('${doc.id}')">Excluir</button>
+                        </td>
+                    `;
+                    tbody.appendChild(tr);
+                    totalProdutos++;
+                });
+
+                document.getElementById('total-produtos').textContent = totalProdutos;
+
             } catch (error) {
                 console.error('Erro ao carregar produtos:', error);
+                mostrarAlerta('produto-error', 'Erro ao carregar: ' + error.message);
             } finally {
-                document.getElementById('loading-produtos').classList.add('hidden');
+                loadingDiv.classList.add('hidden');
             }
         }
 
         window.excluirProduto = async function(id) {
             if (!confirm('Deseja realmente excluir este produto?')) return;
 
-            try {
-                const response = await fetch(SCRIPT_URL, {
-                    method: 'POST',
-                    body: JSON.stringify({ acao: 'excluirProduto', id })
-                });
-                const data = await response.json();
+            if (!firebaseConnected) {
+                alert('Firebase não conectado');
+                return;
+            }
 
-                if (data.sucesso) {
-                    carregarProdutos();
-                } else {
-                    alert('Erro: ' + data.mensagem);
-                }
+            try {
+                await deleteDoc(doc(db, 'produtos', id));
+                mostrarAlerta('produto-success', 'Produto excluído com sucesso!');
+                await carregarProdutos();
+                await atualizarDashboard();
             } catch (error) {
+                console.error('Erro ao excluir produto:', error);
                 alert('Erro ao excluir: ' + error.message);
             }
         };
 
-        // ========== COMANDAS ==========
+        // ========== FUNÇÕES DE COMANDAS ==========
         document.getElementById('criar-comanda').addEventListener('click', async function() {
-            if (!SCRIPT_URL) {
-                alert('Configure a URL do Google Apps Script primeiro');
+            const cliente = document.getElementById('cliente').value.trim();
+
+            if (!cliente) {
+                mostrarAlerta('comanda-error', 'Informe o nome do cliente');
                 return;
             }
 
-            const cliente = document.getElementById('cliente').value;
-
-            const comanda = {
-                cliente: cliente || 'Não informado',
-                itens: []
-            };
+            if (!firebaseConnected) {
+                mostrarAlerta('comanda-error', 'Firebase não conectado. Verifique o status.');
+                return;
+            }
 
             try {
-                const response = await fetch(SCRIPT_URL, {
-                    method: 'POST',
-                    body: JSON.stringify({ acao: 'salvarComanda', comanda })
-                });
-                const data = await response.json();
+                mostrarAlerta('comanda-success', 'Criando comanda...');
 
-                if (data.sucesso) {
-                    mostrarAlerta('comanda-success', 'Comanda criada com sucesso!');
-                    document.getElementById('cliente').value = '';
-                    carregarComandas();
-                } else {
-                    alert('Erro: ' + data.mensagem);
-                }
+                const comanda = {
+                    cliente,
+                    itens: [],
+                    status: 'aberta',
+                    dataAbertura: new Date().toISOString(),
+                    total: 0
+                };
+
+                const docRef = await addDoc(collection(db, 'comandas'), comanda);
+
+                mostrarAlerta('comanda-success', 'Comanda criada com sucesso! ID: ' + docRef.id);
+                document.getElementById('cliente').value = '';
+                await carregarComandas();
+                await atualizarDashboard();
+
             } catch (error) {
-                alert('Erro ao criar comanda: ' + error.message);
+                console.error('Erro ao criar comanda:', error);
+                mostrarAlerta('comanda-error', 'Erro ao criar: ' + error.message);
             }
         });
 
         async function carregarComandas() {
-            if (!SCRIPT_URL) return;
+            if (!firebaseConnected) {
+                document.getElementById('loading-comandas').textContent = 'Firebase não conectado';
+                return;
+            }
 
-            document.getElementById('loading-comandas').classList.remove('hidden');
+            const loadingDiv = document.getElementById('loading-comandas');
+            loadingDiv.classList.remove('hidden');
+            loadingDiv.textContent = 'Carregando comandas...';
+
             try {
-                const response = await fetch(`${SCRIPT_URL}?acao=listarComandas`);
-                const data = await response.json();
+                const q = query(
+                    collection(db, 'comandas'), 
+                    where('status', '==', 'aberta'),
+                    orderBy('dataAbertura', 'desc')
+                );
 
+                const snapshot = await getDocs(q);
                 const lista = document.getElementById('comandas-lista');
                 lista.innerHTML = '';
 
-                if (data.comandas && data.comandas.length > 0) {
-                    data.comandas.forEach(comanda => {
-                        const div = document.createElement('div');
-                        div.className = 'card';
-                        div.innerHTML = `
-                            <h3>Comanda #${comanda.id}</h3>
-                            <p><strong>Cliente:</strong> ${comanda.cliente}</p>
-                            <p><strong>Itens:</strong> ${comanda.itens.length}</p>
-                            <button class="btn btn-success" onclick="fecharComanda('${comanda.id}', '${comanda.cliente}', ${comanda.itens.length})">Fechar Comanda</button>
-                            <button class="btn btn-danger" onclick="excluirComanda('${comanda.id}')">Cancelar</button>
-                        `;
-                        lista.appendChild(div);
-                    });
-                } else {
-                    lista.innerHTML = '<p>Nenhuma comanda ativa</p>';
+                if (snapshot.empty) {
+                    lista.innerHTML = '<p style="text-align:center; color:#777">Nenhuma comanda ativa</p>';
+                    document.getElementById('total-comandas').textContent = '0';
+                    return;
                 }
+
+                let totalComandas = 0;
+                snapshot.forEach(doc => {
+                    const comanda = doc.data();
+                    comanda.id = doc.id; // Adiciona o ID do documento ao objeto comanda
+
+                    const div = document.createElement('div');
+                    div.className = 'card';
+                    div.style.marginBottom = '15px';
+                    div.innerHTML = `
+                        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px">
+                            <h3 style="margin:0">Comanda #${comanda.id.slice(-6)}</h3>
+                            <span class="badge badge-info">Aberta</span>
+                        </div>
+                        <p><strong>Cliente:</strong> ${comanda.cliente}</p>
+                        <p><strong>Data:</strong> ${new Date(comanda.dataAbertura).toLocaleString('pt-BR')}</p>
+                        <p><strong>Itens:</strong> ${comanda.itens.length}</p>
+                        <p><strong>Total:</strong> R$ ${comanda.total.toFixed(2)}</p>
+                        <div style="margin-top:15px">
+                            <button class="btn btn-success" onclick="abrirModalComanda('${doc.id}')">Abrir Comanda</button>
+                            <button class="btn btn-danger" onclick="cancelarComanda('${doc.id}')">Cancelar</button>
+                        </div>
+                    `;
+                    lista.appendChild(div);
+                    totalComandas++;
+                });
+
+                document.getElementById('total-comandas').textContent = totalComandas;
+
             } catch (error) {
                 console.error('Erro ao carregar comandas:', error);
+                mostrarAlerta('comanda-error', 'Erro ao carregar: ' + error.message);
             } finally {
-                document.getElementById('loading-comandas').classList.add('hidden');
+                loadingDiv.classList.add('hidden');
             }
         }
 
-        window.fecharComanda = async function(comandaId, cliente, qtdItens) {
-            const total = prompt('Digite o valor total da comanda:');
-            if (!total) return;
-
-            const formaPagamento = prompt('Forma de pagamento (dinheiro/pix/debito/credito):');
-            if (!formaPagamento) return;
-
-            const venda = {
-                id: 'V_' + Date.now(),
-                comandaId,
-                cliente,
-                data: new Date().toISOString(),
-                total: parseFloat(total),
-                formaPagamento,
-                itens: [] // Simplificado para este exemplo
-            };
-
-            try {
-                const response = await fetch(SCRIPT_URL, {
-                    method: 'POST',
-                    body: JSON.stringify({ acao: 'salvarVenda', venda })
-                });
-                const data = await response.json();
-
-                if (data.sucesso) {
-                    alert('Venda registrada com sucesso!');
-                    carregarComandas();
-                    atualizarDashboard();
-                } else {
-                    alert('Erro: ' + data.mensagem);
-                }
-            } catch (error) {
-                alert('Erro ao fechar comanda: ' + error.message);
-            }
-        };
-
-        window.excluirComanda = async function(id) {
+        window.cancelarComanda = async function(id) {
             if (!confirm('Deseja realmente cancelar esta comanda?')) return;
 
-            try {
-                const response = await fetch(SCRIPT_URL, {
-                    method: 'POST',
-                    body: JSON.stringify({ acao: 'excluirComanda', id })
-                });
-                const data = await response.json();
+            if (!firebaseConnected) {
+                alert('Firebase não conectado');
+                return;
+            }
 
-                if (data.sucesso) {
-                    carregarComandas();
-                } else {
-                    alert('Erro: ' + data.mensagem);
-                }
+            try {
+                await deleteDoc(doc(db, 'comandas', id));
+                mostrarAlerta('comanda-success', 'Comanda cancelada com sucesso!');
+                await carregarComandas();
+                await atualizarDashboard();
             } catch (error) {
-                alert('Erro ao excluir: ' + error.message);
+                console.error('Erro ao cancelar comanda:', error);
+                alert('Erro ao cancelar: ' + error.message);
             }
         };
+
+        // ========== MODAL DE COMANDA (NOVA IMPLEMENTAÇÃO) ==========
+        let produtosDisponiveis = []; // Armazenará os produtos do Firestore
+        let comandaEmEdicao = null; // Armazenará a comanda sendo editada
+
+        // Elementos do modal
+        const modalComanda = document.createElement('div');
+        modalComanda.className = 'modal';
+        modalComanda.innerHTML = `
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h3 id="modal-comanda-titulo">Comanda #ID</h3>
+                    <button class="close-btn" onclick="fecharModalComanda()">&times;</button>
+                </div>
+                <div class="form-group">
+                    <label for="modal-cliente-nome">Cliente</label>
+                    <input type="text" id="modal-cliente-nome" readonly>
+                </div>
+                <hr style="margin: 15px 0; border-color: #eee;">
+                <h4>Adicionar Item</h4>
+                <div class="form-row">
+                    <div class="form-group" style="flex:2">
+                        <label for="modal-produto-select">Produto</label>
+                        <select id="modal-produto-select"></select>
+                    </div>
+                    <div class="form-group" style="flex:1">
+                        <label for="modal-quantidade-item">Qtd</label>
+                        <input type="number" id="modal-quantidade-item" value="1" min="1">
+                    </div>
+                </div>
+                <button class="btn btn-primary" onclick="adicionarItemNaComanda()">Adicionar Item</button>
+                <hr style="margin: 15px 0; border-color: #eee;">
+                <h4>Itens da Comanda</h4>
+                <div id="modal-itens-comanda"></div>
+                <div class="comanda-total" id="modal-comanda-total">Total: R$ 0,00</div>
+                <div style="margin-top: 20px; text-align: right;">
+                    <button class="btn btn-success" onclick="abrirModalPagamento()">Fechar Comanda</button>
+                    <button class="btn btn-danger" onclick="fecharModalComanda()">Cancelar</button>
+                </div>
+            </div>
+        `;
+        document.body.appendChild(modalComanda);
+
+        // Modal de Pagamento
+        const modalPagamento = document.createElement('div');
+        modalPagamento.className = 'modal';
+        modalPagamento.innerHTML = `
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h3>Finalizar Pagamento</h3>
+                    <button class="close-btn" onclick="fecharModalPagamento()">&times;</button>
+                </div>
+                <p>Total a pagar: <strong id="modal-pagamento-total">R$ 0,00</strong></p>
+                <h4>Selecione a forma de pagamento:</h4>
+                <div class="payment-options">
+                    <div class="payment-option" data-payment="dinheiro" onclick="selecionarFormaPagamento('dinheiro')">Dinheiro</div>
+                    <div class="payment-option" data-payment="pix" onclick="selecionarFormaPagamento('pix')">PIX</div>
+                    <div class="payment-option" data-payment="debito" onclick="selecionarFormaPagamento('debito')">Débito</div>
+                    <div class="payment-option" data-payment="credito" onclick="selecionarFormaPagamento('credito')">Crédito</div>
+                </div>
+                <div id="pix-code-container" class="hidden" style="text-align:center; margin-top:15px;">
+                    <p>Chave PIX: <strong id="pix-key">sua-chave-pix-aqui</strong></p>
+                    <button class="btn btn-primary" onclick="copiarPix()">Copiar Chave</button>
+                </div>
+                <div style="margin-top: 20px; text-align: right;">
+                    <button class="btn btn-success" onclick="finalizarPagamento()">Confirmar Pagamento</button>
+                    <button class="btn btn-danger" onclick="fecharModalPagamento()">Voltar</button>
+                </div>
+            </div>
+        `;
+        document.body.appendChild(modalPagamento);
+
+        let formaPagamentoSelecionada = null;
+
+        async function abrirModalComanda(comandaId) {
+            if (!firebaseConnected) {
+                alert('Firebase não conectado');
+                return;
+            }
+
+            try {
+                const docSnap = await getDoc(doc(db, 'comandas', comandaId));
+                if (!docSnap.exists()) {
+                    alert('Comanda não encontrada!');
+                    return;
+                }
+                comandaEmEdicao = { id: docSnap.id, ...docSnap.data() };
+
+                document.getElementById('modal-comanda-titulo').textContent = `Comanda #${comandaEmEdicao.id.slice(-6)}`;
+                document.getElementById('modal-cliente-nome').value = comandaEmEdicao.cliente;
+
+                // Carregar produtos para o select
+                const produtosRef = collection(db, 'produtos');
+                const produtosSnapshot = await getDocs(produtosRef);
+                produtosDisponiveis = produtosSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+
+                const selectProduto = document.getElementById('modal-produto-select');
+                selectProduto.innerHTML = '<option value="">Selecione um produto</option>';
+                produtosDisponiveis.forEach(p => {
+                    selectProduto.innerHTML += `<option value="${p.id}">${p.nome} (R$ ${p.preco.toFixed(2)})</option>`;
+                });
+
+                atualizarItensComandaModal();
+                modalComanda.style.display = 'flex';
+
+            } catch (error) {
+                console.error('Erro ao abrir modal da comanda:', error);
+                alert('Erro ao carregar comanda: ' + error.message);
+            }
+        }
+
+        function fecharModalComanda() {
+            modalComanda.style.display = 'none';
+            comandaEmEdicao = null;
+            comandaAtualId = null; // Resetar ID da comanda atual
+            carregarComandas(); // Recarregar lista de comandas
+        }
+
+        async function adicionarItemNaComanda() {
+            if (!comandaEmEdicao) return;
+
+            const selectProduto = document.getElementById('modal-produto-select');
+            const produtoId = selectProduto.value;
+            const quantidade = parseInt(document.getElementById('modal-quantidade-item').value);
+
+            if (!produtoId || isNaN(quantidade) || quantidade <= 0) {
+                alert('Selecione um produto e uma quantidade válida.');
+                return;
+            }
+
+            const produtoSelecionado = produtosDisponiveis.find(p => p.id === produtoId);
+            if (!produtoSelecionado) {
+                alert('Produto não encontrado.');
+                return;
+            }
+
+            const itemExistenteIndex = comandaEmEdicao.itens.findIndex(item => item.id === produtoId);
+
+            if (itemExistenteIndex > -1) {
+                comandaEmEdicao.itens[itemExistenteIndex].quantidade += quantidade;
+            } else {
+                comandaEmEdicao.itens.push({
+                    id: produtoSelecionado.id,
+                    nome: produtoSelecionado.nome,
+                    preco: produtoSelecionado.preco,
+                    quantidade: quantidade
+                });
+            }
+
+            // Atualizar total da comanda
+            comandaEmEdicao.total = comandaEmEdicao.itens.reduce((sum, item) => sum + (item.preco * item.quantidade), 0);
+
+            try {
+                await updateDoc(doc(db, 'comandas', comandaEmEdicao.id), {
+                    itens: comandaEmEdicao.itens,
+                    total: comandaEmEdicao.total
+                });
+                mostrarAlerta('comanda-success', 'Item adicionado/atualizado na comanda!');
+                atualizarItensComandaModal();
+                document.getElementById('modal-quantidade-item').value = '1';
+                selectProduto.value = ''; // Limpar seleção
+            } catch (error) {
+                console.error('Erro ao adicionar item:', error);
+                alert('Erro ao adicionar item: ' + error.message);
+            }
+        }
+
+        async function removerItemDaComanda(itemIndex) {
+            if (!comandaEmEdicao || !confirm('Remover este item da comanda?')) return;
+
+            comandaEmEdicao.itens.splice(itemIndex, 1);
+            comandaEmEdicao.total = comandaEmEdicao.itens.reduce((sum, item) => sum + (item.preco * item.quantidade), 0);
+
+            try {
+                await updateDoc(doc(db, 'comandas', comandaEmEdicao.id), {
+                    itens: comandaEmEdicao.itens,
+                    total: comandaEmEdicao.total
+                });
+                mostrarAlerta('comanda-success', 'Item removido da comanda!');
+                atualizarItensComandaModal();
+            } catch (error) {
+                console.error('Erro ao remover item:', error);
+                alert('Erro ao remover item: ' + error.message);
+            }
+        }
+
+        function atualizarItensComandaModal() {
+            const container = document.getElementById('modal-itens-comanda');
+            const totalElement = document.getElementById('modal-comanda-total');
+            container.innerHTML = '';
+
+            if (comandaEmEdicao.itens.length === 0) {
+                container.innerHTML = '<p style="text-align:center; color:#777">Nenhum item adicionado à comanda</p>';
+                totalElement.textContent = 'Total: R$ 0,00';
+                return;
+            }
+
+            comandaEmEdicao.itens.forEach((item, index) => {
+                const itemTotal = item.preco * item.quantidade;
+                const div = document.createElement('div');
+                div.className = 'comanda-item';
+                div.style.display = 'flex';
+                div.style.justifyContent = 'space-between';
+                div.style.alignItems = 'center';
+                div.style.padding = '10px 0';
+                div.style.borderBottom = '1px solid #eee';
+                div.innerHTML = `
+                    <div>
+                        <strong>${item.nome}</strong><br>
+                        <small>R$ ${item.preco.toFixed(2)} x ${item.quantidade}</small>
+                    </div>
+                    <div>
+                        <span>R$ ${itemTotal.toFixed(2)}</span>
+                        <button class="btn btn-danger" style="margin-left: 10px;" onclick="removerItemDaComanda(${index})">Remover</button>
+                    </div>
+                `;
+                container.appendChild(div);
+            });
+            totalElement.textContent = `Total: R$ ${comandaEmEdicao.total.toFixed(2)}`;
+        }
+
+        function abrirModalPagamento() {
+            if (!comandaEmEdicao || comandaEmEdicao.itens.length === 0) {
+                alert('Adicione itens à comanda antes de fechar.');
+                return;
+            }
+            document.getElementById('modal-pagamento-total').textContent = `R$ ${comandaEmEdicao.total.toFixed(2)}`;
+            modalComanda.style.display = 'none'; // Esconde o modal da comanda
+            modalPagamento.style.display = 'flex'; // Mostra o modal de pagamento
+            formaPagamentoSelecionada = null; // Resetar seleção
+            document.querySelectorAll('.payment-option').forEach(option => option.classList.remove('selected'));
+            document.getElementById('pix-code-container').classList.add('hidden'); // Esconde PIX
+        }
+
+        function fecharModalPagamento() {
+            modalPagamento.style.display = 'none';
+            modalComanda.style.display = 'flex'; // Volta para o modal da comanda
+        }
+
+        window.selecionarFormaPagamento = function(forma) {
+            document.querySelectorAll('.payment-option').forEach(option => option.classList.remove('selected'));
+            document.querySelector(`.payment-option[data-payment="${forma}"]`).classList.add('selected');
+            formaPagamentoSelecionada = forma;
+            if (forma === 'pix') {
+                document.getElementById('pix-code-container').classList.remove('hidden');
+            } else {
+                document.getElementById('pix-code-container').classList.add('hidden');
+            }
+        };
+
+        window.copiarPix = function() {
+            const pixKey = document.getElementById('pix-key').textContent;
+            navigator.clipboard.writeText(pixKey).then(() => {
+                alert('Chave PIX copiada!');
+            }).catch(err => {
+                console.error('Erro ao copiar PIX:', err);
+                alert('Erro ao copiar chave PIX.');
+            });
+        };
+
+        async function finalizarPagamento() {
+            if (!comandaEmEdicao || !formaPagamentoSelecionada) {
+                alert('Selecione uma forma de pagamento.');
+                return;
+            }
+
+            if (!firebaseConnected) {
+                alert('Firebase não conectado');
+                return;
+            }
+
+            try {
+                mostrarAlerta('comanda-success', 'Finalizando pagamento...');
+
+                const venda = {
+                    comandaId: comandaEmEdicao.id,
+                    cliente: comandaEmEdicao.cliente,
+                    itens: comandaEmEdicao.itens,
+                    total: comandaEmEdicao.total,
+                    formaPagamento: formaPagamentoSelecionada,
+                    data: new Date().toISOString()
+                };
+
+                await addDoc(collection(db, 'vendas'), venda);
+
+                // Atualizar status da comanda para 'fechada'
+                await updateDoc(doc(db, 'comandas', comandaEmEdicao.id), {
+                    status: 'fechada',
+                    dataFechamento: new Date().toISOString()
+                });
+
+                mostrarAlerta('comanda-success', `Comanda #${comandaEmEdicao.id.slice(-6)} fechada com sucesso!`);
+
+                fecharModalPagamento();
+                fecharModalComanda(); // Isso também recarrega as comandas e o dashboard
+
+            } catch (error) {
+                console.error('Erro ao finalizar pagamento:', error);
+                alert('Erro ao finalizar pagamento: ' + error.message);
+            }
+        }
 
         // ========== RELATÓRIOS ==========
         document.getElementById('filtrar-relatorio').addEventListener('click', carregarVendas);
 
         async function carregarVendas() {
-            if (!SCRIPT_URL) return;
+            if (!firebaseConnected) {
+                document.getElementById('loading-vendas').textContent = 'Firebase não conectado';
+                return;
+            }
 
             const dataInicio = document.getElementById('data-inicio').value;
             const dataFim = document.getElementById('data-fim').value;
 
-            document.getElementById('loading-vendas').classList.remove('hidden');
+            const loadingDiv = document.getElementById('loading-vendas');
+            loadingDiv.classList.remove('hidden');
+            loadingDiv.textContent = 'Carregando vendas...';
+
             try {
-                const response = await fetch(`${SCRIPT_URL}?acao=listarVendas&dataInicio=${dataInicio}&dataFim=${dataFim}`);
-                const data = await response.json();
+                let q = collection(db, 'vendas');
+
+                // Filtros por data
+                if (dataInicio) {
+                    q = query(q, where('data', '>=', new Date(dataInicio).toISOString()));
+                }
+                if (dataFim) {
+                    const fim = new Date(dataFim);
+                    fim.setHours(23, 59, 59, 999); // Inclui o dia inteiro
+                    q = query(q, where('data', '<=', fim.toISOString()));
+                }
+
+                q = query(q, orderBy('data', 'desc'));
+                const snapshot = await getDocs(q);
 
                 const tbody = document.querySelector('#tabela-vendas tbody');
                 tbody.innerHTML = '';
 
-                if (data.vendas && data.vendas.length > 0) {
-                    data.vendas.forEach(venda => {
-                        const tr = document.createElement('tr');
-                        tr.innerHTML = `
-                            <td>${venda.data}</td>
-                            <td>${venda.cliente}</td>
-                            <td>R$ ${venda.total.toFixed(2)}</td>
-                            <td>${venda.formaPagamento}</td>
-                        `;
-                        tbody.appendChild(tr);
-                    });
-                } else {
-                    tbody.innerHTML = '<tr><td colspan="4" style="text-align:center">Nenhuma venda encontrada</td></tr>';
+                if (snapshot.empty) {
+                    tbody.innerHTML = '<tr><td colspan="5" style="text-align:center">Nenhuma venda encontrada</td></tr>';
+                    return;
                 }
+
+                snapshot.forEach(doc => {
+                    const venda = doc.data();
+                    venda.id = doc.id;
+
+                    const tr = document.createElement('tr');
+                    tr.innerHTML = `
+                        <td>${new Date(venda.data).toLocaleDateString('pt-BR')}</td>
+                        <td>${venda.cliente || 'Não informado'}</td>
+                        <td>R$ ${venda.total.toFixed(2)}</td>
+                        <td>${venda.formaPagamento}</td>
+                        <td>
+                            <button class="btn btn-primary" onclick="verDetalhesVenda('${doc.id}')">Detalhes</button>
+                        </td>
+                    `;
+                    tbody.appendChild(tr);
+                });
+
             } catch (error) {
                 console.error('Erro ao carregar vendas:', error);
+                mostrarAlerta('relatorio-error', 'Erro ao carregar vendas: ' + error.message);
             } finally {
-                document.getElementById('loading-vendas').classList.add('hidden');
+                loadingDiv.classList.add('hidden');
             }
         }
 
-        // ========== DASHBOARD ==========
-        async function atualizarDashboard() {
-            if (!SCRIPT_URL) return;
+        window.verDetalhesVenda = async function(vendaId) {
+            if (!firebaseConnected) {
+                alert('Firebase não conectado');
+                return;
+            }
 
             try {
-                // Carregar produtos
-                const respProdutos = await fetch(`${SCRIPT_URL}?acao=listarProdutos`);
-                const dataProdutos = await respProdutos.json();
-                document.getElementById('total-produtos').textContent = dataProdutos.produtos?.length || 0;
+                const docSnap = await getDoc(doc(db, 'vendas', vendaId));
+                if (!docSnap.exists()) {
+                    alert('Venda não encontrada!');
+                    return;
+                }
+                const venda = docSnap.data();
 
-                // Carregar comandas
-                const respComandas = await fetch(`${SCRIPT_URL}?acao=listarComandas`);
-                const dataComandas = await respComandas.json();
-                document.getElementById('total-comandas').textContent = dataComandas.comandas?.length || 0;
+                let detalhes = `ID da Venda: ${venda.id}\n`;
+                detalhes += `Comanda: #${venda.comandaId.slice(-6)}\n`;
+                detalhes += `Cliente: ${venda.cliente || 'Não informado'}\n`;
+                detalhes += `Data: ${new Date(venda.data).toLocaleString('pt-BR')}\n`;
+                detalhes += `Forma de Pagamento: ${venda.formaPagamento}\n\n`;
+                detalhes += `Itens:\n`;
+                venda.itens.forEach(item => {
+                    detalhes += `- ${item.quantidade}x ${item.nome} (R$ ${item.preco.toFixed(2)}) = R$ ${(item.preco * item.quantidade).toFixed(2)}\n`;
+                });
+                detalhes += `\nTotal: R$ ${venda.total.toFixed(2)}`;
 
-                // Carregar vendas
-                const respVendas = await fetch(`${SCRIPT_URL}?acao=listarVendas`);
-                const dataVendas = await respVendas.json();
-                const totalVendas = dataVendas.vendas?.reduce((sum, v) => sum + v.total, 0) || 0;
+                alert(detalhes);
+
+            } catch (error) {
+                console.error('Erro ao ver detalhes da venda:', error);
+                alert('Erro ao carregar detalhes da venda: ' + error.message);
+            }
+        };
+
+        // ========== DASHBOARD ==========
+        async function atualizarDashboard() {
+            if (!firebaseConnected) {
+                document.getElementById('loading-dashboard').textContent = 'Firebase não conectado';
+                return;
+            }
+
+            const loadingDiv = document.getElementById('loading-dashboard');
+            loadingDiv.classList.remove('hidden');
+            loadingDiv.textContent = 'Carregando dados do dashboard...';
+
+            try {
+                // Total de Produtos
+                const produtosSnapshot = await getDocs(collection(db, 'produtos'));
+                document.getElementById('total-produtos').textContent = produtosSnapshot.size;
+
+                // Total de Comandas Ativas
+                const comandasSnapshot = await getDocs(query(collection(db, 'comandas'), where('status', '==', 'aberta')));
+                document.getElementById('total-comandas').textContent = comandasSnapshot.size;
+
+                // Total em Vendas e Vendas Hoje
+                const vendasSnapshot = await getDocs(collection(db, 'vendas'));
+                let totalVendas = 0;
+                let vendasHoje = 0;
+                const hoje = new Date().toISOString().slice(0, 10);
+
+                vendasSnapshot.forEach(doc => {
+                    const venda = doc.data();
+                    totalVendas += venda.total || 0;
+                    if ((venda.data || '').startsWith(hoje)) {
+                        vendasHoje++;
+                    }
+                });
+
                 document.getElementById('total-vendas').textContent = `R$ ${totalVendas.toFixed(2)}`;
+                document.getElementById('vendas-hoje').textContent = vendasHoje;
+
             } catch (error) {
                 console.error('Erro ao atualizar dashboard:', error);
+                mostrarAlerta('dashboard-error', 'Erro ao carregar dashboard: ' + error.message);
+            } finally {
+                loadingDiv.classList.add('hidden');
             }
         }
 
@@ -652,6 +1172,12 @@
 
                 document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
                 document.getElementById(this.dataset.section).classList.add('active');
+
+                // Recarregar dados da seção ativa
+                if (this.dataset.section === 'produtos') carregarProdutos();
+                if (this.dataset.section === 'comandas') carregarComandas();
+                if (this.dataset.section === 'relatorios') carregarVendas();
+                if (this.dataset.section === 'dashboard') atualizarDashboard();
             });
         });
 
@@ -665,12 +1191,14 @@
 
         // ========== INICIALIZAÇÃO ==========
         document.addEventListener('DOMContentLoaded', function() {
-            carregarConfig();
-            if (SCRIPT_URL) {
-                carregarProdutos();
-                carregarComandas();
-                atualizarDashboard();
-            }
+            initializeFirebase(); // Inicia a conexão com o Firebase
+
+            // Configurar data padrão para relatórios (últimos 7 dias)
+            const dataFim = new Date();
+            const dataInicio = new Date();
+            dataInicio.setDate(dataInicio.getDate() - 7);
+            document.getElementById('data-inicio').value = dataInicio.toISOString().split('T')[0];
+            document.getElementById('data-fim').value = dataFim.toISOString().split('T')[0];
         });
     </script>
 </body>
