@@ -224,6 +224,104 @@
             color: #721c24; 
             border: 1px solid #f5c6cb;
         }
+        /* Estilos para o modal */
+        .modal {
+            display: none; /* Hidden by default */
+            position: fixed; /* Stay in place */
+            z-index: 1000; /* Sit on top */
+            left: 0;
+            top: 0;
+            width: 100%; /* Full width */
+            height: 100%; /* Full height */
+            overflow: auto; /* Enable scroll if needed */
+            background-color: rgba(0,0,0,0.4); /* Black w/ opacity */
+            align-items: center;
+            justify-content: center;
+        }
+        .modal-content {
+            background-color: #fefefe;
+            margin: auto;
+            padding: 20px;
+            border: 1px solid #888;
+            width: 80%;
+            max-width: 600px;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px 0 rgba(0,0,0,0.2), 0 6px 20px 0 rgba(0,0,0,0.19);
+            position: relative;
+        }
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+        .modal-header h3 {
+            margin: 0;
+            color: var(--primary);
+        }
+        .close-btn {
+            color: #aaa;
+            float: right;
+            font-size: 28px;
+            font-weight: bold;
+            cursor: pointer;
+            border: none;
+            background: none;
+        }
+        .close-btn:hover,
+        .close-btn:focus {
+            color: #000;
+            text-decoration: none;
+            cursor: pointer;
+        }
+        .comanda-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px 0;
+            border-bottom: 1px solid #eee;
+        }
+        .comanda-total {
+            font-size: 1.2em;
+            font-weight: bold;
+            text-align: right;
+            margin-top: 15px;
+        }
+        .payment-options {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+            gap: 10px;
+            margin-top: 15px;
+        }
+        .payment-option {
+            padding: 15px;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .payment-option:hover {
+            border-color: var(--secondary);
+            background-color: #f0f8ff;
+        }
+        .payment-option.selected {
+            border-color: var(--success);
+            background-color: #e6ffe6;
+        }
+        #pix-code-container {
+            margin-top: 20px;
+            padding: 15px;
+            background-color: #f8f8f8;
+            border-radius: 8px;
+            border: 1px dashed #ccc;
+            text-align: center;
+        }
+        #pix-key {
+            font-family: monospace;
+            font-size: 1.1em;
+            word-break: break-all;
+        }
     </style>
 </head>
 <body>
@@ -403,15 +501,17 @@
     </div>
 
     <!-- Firebase SDKs -->
+    <!-- Carregamento assíncrono para garantir que o DOM esteja pronto -->
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+
     <script>
         // =================================================================================
         // ATENÇÃO: SUBSTITUA ESTE OBJETO firebaseConfig PELAS SUAS CREDENCIAIS REAIS DO FIREBASE!
         // Você as encontra no Console do Firebase > Configurações do Projeto > Seus apps > Web
         // =================================================================================
         const firebaseConfig = {
-            apiKey: "YOUR_API_KEY", // Ex: "AIzaSyC_YOUR_API_KEY"
+            apiKey: "AIzaSyC_YOUR_API_KEY", // Ex: "AIzaSyC_YOUR_API_KEY"
             authDomain: "YOUR_PROJECT_ID.firebaseapp.com", // Ex: "coiote-da379.firebaseapp.com"
             projectId: "YOUR_PROJECT_ID", // Ex: "coiote-da379"
             storageBucket: "YOUR_PROJECT_ID.appspot.com", // Ex: "coiote-da379.appspot.com"
@@ -427,10 +527,11 @@
 
         // Importa as funções do Firestore
         const { initializeApp } = firebase;
-        const { getFirestore, collection, addDoc, getDocs, deleteDoc, doc, query, where, orderBy, updateDoc } = firebase.firestore;
+        const { getFirestore, collection, addDoc, getDocs, deleteDoc, doc, query, where, orderBy, updateDoc, getDoc } = firebase.firestore;
 
-        // Variável para armazenar o ID da comanda atualmente aberta no modal (se você for implementar um modal)
-        let comandaAtualId = null;
+        // Variável para armazenar a comanda atualmente aberta no modal
+        let comandaEmEdicao = null;
+        let produtosDisponiveis = []; // Para o select de produtos no modal da comanda
 
         // ========== FUNÇÕES DE INICIALIZAÇÃO E CONEXÃO FIREBASE ==========
         async function initializeFirebase() {
@@ -455,7 +556,7 @@
 
         async function testarConexaoFirebase() {
             try {
-                // Tenta listar produtos para verificar a conexão e permissões
+                // Tenta buscar uma coleção para verificar a conexão e permissões
                 const produtosRef = collection(db, 'produtos');
                 await getDocs(produtosRef); // Apenas tenta buscar, não precisa dos dados
                 return true;
@@ -667,7 +768,7 @@
                 let totalComandas = 0;
                 snapshot.forEach(doc => {
                     const comanda = doc.data();
-                    comanda.id = doc.id; // Adiciona o ID do documento ao objeto comanda
+                    comanda.id = doc.id;
 
                     const div = document.createElement('div');
                     div.className = 'card';
@@ -720,9 +821,6 @@
         };
 
         // ========== MODAL DE COMANDA (NOVA IMPLEMENTAÇÃO) ==========
-        let produtosDisponiveis = []; // Armazenará os produtos do Firestore
-        let comandaEmEdicao = null; // Armazenará a comanda sendo editada
-
         // Elementos do modal
         const modalComanda = document.createElement('div');
         modalComanda.className = 'modal';
@@ -832,8 +930,8 @@
         function fecharModalComanda() {
             modalComanda.style.display = 'none';
             comandaEmEdicao = null;
-            comandaAtualId = null; // Resetar ID da comanda atual
             carregarComandas(); // Recarregar lista de comandas
+            atualizarDashboard(); // Atualizar dashboard
         }
 
         async function adicionarItemNaComanda() {
@@ -1165,7 +1263,7 @@
 
         // ========== NAVEGAÇÃO ==========
         document.querySelectorAll('.nav-link').forEach(link => {
-            link.addEventListener('click', function(e) {
+            link.addEventListener('click', async function(e) { // Adicionado 'async' aqui
                 e.preventDefault();
                 document.querySelectorAll('.nav-link').forEach(l => l.classList.remove('active'));
                 this.classList.add('active');
@@ -1174,10 +1272,10 @@
                 document.getElementById(this.dataset.section).classList.add('active');
 
                 // Recarregar dados da seção ativa
-                if (this.dataset.section === 'produtos') carregarProdutos();
-                if (this.dataset.section === 'comandas') carregarComandas();
-                if (this.dataset.section === 'relatorios') carregarVendas();
-                if (this.dataset.section === 'dashboard') atualizarDashboard();
+                if (this.dataset.section === 'produtos') await carregarProdutos();
+                if (this.dataset.section === 'comandas') await carregarComandas();
+                if (this.dataset.section === 'relatorios') await carregarVendas();
+                if (this.dataset.section === 'dashboard') await atualizarDashboard();
             });
         });
 
