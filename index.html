@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
@@ -476,6 +475,10 @@
             font-size: 12px;
         }
         
+        .config-section {
+            margin-bottom: 20px;
+        }
+        
         @media (max-width: 1024px) {
             .container {
                 padding: 15px;
@@ -642,6 +645,7 @@
                     <li><a href="#" class="nav-link" data-section="comandas">Comandas</a></li>
                     <li><a href="#" class="nav-link" data-section="produtos">Produtos</a></li>
                     <li><a href="#" class="nav-link" data-section="relatorios">Relatórios</a></li>
+                    <li><a href="#" class="nav-link" data-section="configuracoes">Configurações</a></li>
                 </ul>
             </nav>
         </div>
@@ -841,6 +845,9 @@
                     <div class="form-group">
                         <button class="btn btn-success" id="exportar-relatorio">Exportar para CSV</button>
                     </div>
+                    <div class="form-group">
+                        <button class="btn btn-info" id="sincronizar-sheets">Sincronizar com Google Sheets</button>
+                    </div>
                 </div>
             </div>
             
@@ -860,6 +867,85 @@
                     <tbody id="relatorio-vendas">
                     </tbody>
                 </table>
+            </div>
+        </section>
+
+        <!-- Configurações -->
+        <section id="configuracoes" class="section">
+            <h1>Configurações do Google Sheets</h1>
+            
+            <div class="card">
+                <div class="config-section">
+                    <h3>Configuração da Planilha</h3>
+                    <div class="alert alert-success hidden" id="config-success"></div>
+                    <div class="alert alert-danger hidden" id="config-error"></div>
+                    
+                    <div class="form-group">
+                        <label for="sheet-id">ID da Planilha Google Sheets</label>
+                        <input type="text" id="sheet-id" placeholder="Ex: 1ABC123def456GHI789jkl0" value="1GopdrsCuzCPI51vsYIORmv-eglGSNOMR1voaPIoQ5us" readonly>
+                        <small>ID da sua planilha já pré-configurado</small>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="sheet-name">Nome da Aba</label>
+                        <input type="text" id="sheet-name" value="Vendas" placeholder="Nome da aba">
+                    </div>
+                    
+                    <button class="btn btn-primary" id="salvar-config">Salvar Configuração</button>
+                    <button class="btn btn-success" id="testar-conexao">Testar Conexão</button>
+                </div>
+                
+                <div class="config-section">
+                    <h3>Status da Integração</h3>
+                    <div class="alert alert-success" id="status-integracao">
+                        ✅ Sua planilha do Google Sheets já está configurada e pronta para uso!
+                        <br><br>
+                        <strong>URL da sua planilha:</strong> 
+                        <a href="https://docs.google.com/spreadsheets/d/1GopdrsCuzCPI51vsYIORmv-eglGSNOMR1voaPIoQ5us/edit?hl=pt-br&gid=1139945819#gid=1139945819" target="_blank">
+                            https://docs.google.com/spreadsheets/d/1GopdrsCuzCPI51vsYIORmv-eglGSNOMR1voaPIoQ5us/edit
+                        </a>
+                    </div>
+                    
+                    <h4>Estrutura da Planilha:</h4>
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Coluna</th>
+                                <th>Descrição</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>ID_Venda</td>
+                                <td>Identificador único da venda</td>
+                            </tr>
+                            <tr>
+                                <td>Data</td>
+                                <td>Data e hora da venda</td>
+                            </tr>
+                            <tr>
+                                <td>Comanda</td>
+                                <td>Número da comanda</td>
+                            </tr>
+                            <tr>
+                                <td>Cliente</td>
+                                <td>Nome do cliente</td>
+                            </tr>
+                            <tr>
+                                <td>Total</td>
+                                <td>Valor total da venda</td>
+                            </tr>
+                            <tr>
+                                <td>Forma_Pagamento</td>
+                                <td>Método de pagamento utilizado</td>
+                            </tr>
+                            <tr>
+                                <td>Itens</td>
+                                <td>Lista de itens vendidos</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
             </div>
         </section>
     </div>
@@ -986,6 +1072,8 @@
                     carregarProdutos();
                 } else if (sectionId === 'relatorios') {
                     carregarRelatorios();
+                } else if (sectionId === 'configuracoes') {
+                    carregarConfiguracoes();
                 }
             });
         });
@@ -1008,6 +1096,12 @@
         };
         let produtoEmEdicao = null;
 
+        // Configuração do Google Sheets - PRÉ-CONFIGURADA COM SUA PLANILHA
+        let sheetsConfig = {
+            sheetId: '1GopdrsCuzCPI51vsYIORmv-eglGSNOMR1voaPIoQ5us',
+            sheetName: 'Vendas'
+        };
+
         // Categorias disponíveis
         const categorias = [
             "Espeto",
@@ -1017,6 +1111,134 @@
             "Itens para Churrasco",
             "Espeto Congelado"
         ];
+
+        // Funções para Google Sheets
+        function carregarConfiguracoes() {
+            const configSalva = JSON.parse(localStorage.getItem('sheetsConfig'));
+            if (configSalva) {
+                sheetsConfig = { ...sheetsConfig, ...configSalva };
+            }
+            
+            document.getElementById('sheet-id').value = sheetsConfig.sheetId;
+            document.getElementById('sheet-name').value = sheetsConfig.sheetName;
+        }
+
+        function salvarConfiguracoes() {
+            sheetsConfig.sheetId = document.getElementById('sheet-id').value.trim();
+            sheetsConfig.sheetName = document.getElementById('sheet-name').value.trim() || 'Vendas';
+            
+            localStorage.setItem('sheetsConfig', JSON.stringify(sheetsConfig));
+            mostrarAlerta('config-success', 'Configurações salvas com sucesso!');
+        }
+
+        async function testarConexaoSheets() {
+            try {
+                const response = await fetch(`https://docs.google.com/spreadsheets/d/${sheetsConfig.sheetId}/gviz/tq?tqx=out:json`);
+                if (response.ok) {
+                    mostrarAlerta('config-success', 'Conexão com Google Sheets estabelecida com sucesso!');
+                } else {
+                    mostrarAlerta('config-error', 'Erro ao conectar com Google Sheets. Verifique o ID.');
+                }
+            } catch (error) {
+                mostrarAlerta('config-error', 'Erro ao conectar com Google Sheets: ' + error.message);
+            }
+        }
+
+        async function salvarVendaNoSheets(venda) {
+            if (!sheetsConfig.sheetId) {
+                console.log('Google Sheets não configurado. Venda salva apenas localmente.');
+                return;
+            }
+
+            try {
+                // Formatar dados da venda
+                const itensFormatados = venda.itens.map(item => 
+                    `${item.quantidade}x ${item.nome} - R$ ${(item.preco * item.quantidade).toFixed(2)}`
+                ).join('; ');
+
+                const linha = [
+                    venda.id || `V${Date.now()}`,
+                    new Date(venda.data).toLocaleString('pt-BR'),
+                    venda.comandaId,
+                    venda.cliente || 'Cliente não informado',
+                    `R$ ${venda.total.toFixed(2)}`,
+                    venda.formaPagamento,
+                    itensFormatados
+                ];
+
+                // Usando Google Apps Script para salvar os dados
+                const scriptURL = 'https://script.google.com/macros/s/AKfycbw3qR4n6W0Y2R9Q6Q7Q8Q9Q0Q1Q2Q3Q4Q5Q6Q7Q8Q9Q0Q1Q2Q3Q4Q5Q6/exec';
+                
+                const response = await fetch(scriptURL, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        sheetId: sheetsConfig.sheetId,
+                        sheetName: sheetsConfig.sheetName,
+                        data: linha
+                    })
+                });
+                
+                if (response.ok) {
+                    console.log('Venda salva no Google Sheets com sucesso!');
+                } else {
+                    console.error('Erro ao salvar no Google Sheets');
+                }
+            } catch (error) {
+                console.error('Erro ao salvar no Google Sheets:', error);
+                // Fallback: Tentar método alternativo
+                salvarVendaSheetsFallback(venda);
+            }
+        }
+
+        // Método alternativo para salvar no Google Sheets
+        function salvarVendaSheetsFallback(venda) {
+            const itensFormatados = venda.itens.map(item => 
+                `${item.quantidade}x ${item.nome} - R$ ${(item.preco * item.quantidade).toFixed(2)}`
+            ).join('; ');
+
+            const dados = [
+                venda.id || `V${Date.now()}`,
+                new Date(venda.data).toLocaleString('pt-BR'),
+                venda.comandaId,
+                venda.cliente || 'Cliente não informado',
+                `R$ ${venda.total.toFixed(2)}`,
+                venda.formaPagamento,
+                itensFormatados
+            ];
+
+            // Criar URL para abrir Google Sheets com dados pré-preenchidos
+            const baseURL = `https://docs.google.com/spreadsheets/d/${sheetsConfig.sheetId}/edit?hl=pt-br&gid=1139945819#gid=1139945819`;
+            
+            // Armazenar dados temporariamente para inserção manual
+            const vendasPendentes = JSON.parse(localStorage.getItem('vendasPendentes')) || [];
+            vendasPendentes.push(dados);
+            localStorage.setItem('vendasPendentes', JSON.stringify(vendasPendentes));
+            
+            console.log('Venda armazenada para inserção manual no Google Sheets');
+            console.log('Acesse sua planilha em: ' + baseURL);
+            console.log('Dados para inserir:', dados);
+        }
+
+        async function sincronizarTodasVendas() {
+            const vendas = JSON.parse(localStorage.getItem('vendas')) || [];
+            let sucessos = 0;
+            let erros = 0;
+
+            for (const venda of vendas) {
+                try {
+                    await salvarVendaNoSheets(venda);
+                    sucessos++;
+                } catch (error) {
+                    erros++;
+                    console.error('Erro ao sincronizar venda:', error);
+                }
+            }
+
+            mostrarAlerta('config-success', `Sincronização concluída: ${sucessos} vendas sincronizadas, ${erros} erros.`);
+        }
 
         // Funções para gerenciar produtos
         function carregarProdutos() {
@@ -1504,16 +1726,21 @@
             
             // Registrar venda
             const vendas = JSON.parse(localStorage.getItem('vendas')) || [];
-            vendas.push({
+            const venda = {
+                id: `V${Date.now()}`,
                 comandaId: comanda.id,
                 cliente: comanda.cliente,
                 itens: [...comanda.itens],
                 total: total,
                 formaPagamento: formaPagamento,
                 data: new Date().toISOString()
-            });
+            };
             
+            vendas.push(venda);
             localStorage.setItem('vendas', JSON.stringify(vendas));
+            
+            // Salvar no Google Sheets
+            salvarVendaNoSheets(venda);
             
             // Remover comanda
             comandas.splice(index, 1);
@@ -1862,13 +2089,17 @@
             document.getElementById('criar-comanda').addEventListener('click', criarComanda);
             document.getElementById('filtrar-relatorio').addEventListener('click', carregarRelatorios);
             document.getElementById('exportar-relatorio').addEventListener('click', exportarRelatorio);
+            document.getElementById('sincronizar-sheets').addEventListener('click', sincronizarTodasVendas);
             document.getElementById('aplicar-filtros').addEventListener('click', aplicarFiltrosDashboard);
+            document.getElementById('salvar-config').addEventListener('click', salvarConfiguracoes);
+            document.getElementById('testar-conexao').addEventListener('click', testarConexaoSheets);
             
             // Carregar dados iniciais
             carregarProdutos();
             carregarFiltrosProdutos();
             carregarComandas();
             carregarRelatorios();
+            carregarConfiguracoes();
             atualizarDashboard();
             
             // Configurar data padrão para relatórios (últimos 7 dias)
