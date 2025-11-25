@@ -11,8 +11,6 @@
             --success: #27ae60;
             --danger: #e74c3c;
             --warning: #f39c12;
-            --light: #ecf0f1;
-            --dark: #2c3e50;
         }
         * {
             margin: 0;
@@ -68,7 +66,7 @@
             padding: 20px;
             margin-bottom: 20px;
         }
-        h1, h2, h3 {
+        h1, h2 {
             margin-bottom: 15px;
             color: var(--primary);
         }
@@ -92,27 +90,9 @@
             background-color: var(--danger);
             color: white;
         }
-        .btn-warning {
-            background-color: var(--warning);
-            color: white;
-        }
         .btn:hover {
             opacity: 0.9;
             transform: translateY(-2px);
-        }
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            margin-bottom: 20px;
-        }
-        table th, table td {
-            padding: 10px;
-            text-align: left;
-            border-bottom: 1px solid #ddd;
-        }
-        table th {
-            background-color: #f8f9fa;
-            font-weight: bold;
         }
         .form-group {
             margin-bottom: 15px;
@@ -127,14 +107,6 @@
             padding: 8px 10px;
             border: 1px solid #ddd;
             border-radius: 4px;
-            font-size: 14px;
-        }
-        .form-row {
-            display: flex;
-            gap: 15px;
-        }
-        .form-row .form-group {
-            flex: 1;
         }
         .section {
             display: none;
@@ -150,12 +122,31 @@
         .alert-success {
             background-color: #d4edda;
             color: #155724;
-            border: 1px solid #c3e6cb;
         }
         .alert-danger {
             background-color: #f8d7da;
             color: #721c24;
-            border: 1px solid #f5c6cb;
+        }
+        .hidden {
+            display: none;
+        }
+        .loading {
+            text-align: center;
+            padding: 20px;
+            color: var(--secondary);
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        th, td {
+            padding: 10px;
+            text-align: left;
+            border-bottom: 1px solid #ddd;
+        }
+        th {
+            background-color: #f8f9fa;
+            font-weight: bold;
         }
         .dashboard-stats {
             display: grid;
@@ -179,48 +170,6 @@
             font-size: 14px;
             color: #777;
         }
-        .hidden {
-            display: none;
-        }
-        .badge {
-            display: inline-block;
-            padding: 3px 8px;
-            border-radius: 12px;
-            font-size: 12px;
-            font-weight: bold;
-        }
-        .badge-success {
-            background-color: var(--success);
-            color: white;
-        }
-        .badge-warning {
-            background-color: var(--warning);
-            color: white;
-        }
-        .badge-danger {
-            background-color: var(--danger);
-            color: white;
-        }
-        .badge-info {
-            background-color: var(--secondary);
-            color: white;
-        }
-        .config-section {
-            margin-bottom: 20px;
-        }
-        .status-indicator {
-            display: inline-block;
-            width: 10px;
-            height: 10px;
-            border-radius: 50%;
-            margin-right: 5px;
-        }
-        .status-ok {
-            background-color: var(--success);
-        }
-        .status-error {
-            background-color: var(--danger);
-        }
     </style>
 </head>
 <body>
@@ -228,10 +177,10 @@
         <div class="container header-content">
             <div class="logo">Sistema Restaurante</div>
             <nav>
-                <ul id="navMenu">
+                <ul>
                     <li><a href="#" class="nav-link active" data-section="dashboard">Dashboard</a></li>
-                    <li><a href="#" class="nav-link" data-section="comandas">Comandas</a></li>
                     <li><a href="#" class="nav-link" data-section="produtos">Produtos</a></li>
+                    <li><a href="#" class="nav-link" data-section="comandas">Comandas</a></li>
                     <li><a href="#" class="nav-link" data-section="relatorios">Relatórios</a></li>
                     <li><a href="#" class="nav-link" data-section="configuracoes">Configurações</a></li>
                 </ul>
@@ -256,28 +205,6 @@
                     <div class="stat-value" id="total-produtos">0</div>
                     <div class="stat-label">Produtos Cadastrados</div>
                 </div>
-                <div class="stat-card">
-                    <div class="stat-value" id="vendas-hoje">0</div>
-                    <div class="stat-label">Vendas Hoje</div>
-                </div>
-            </div>
-        </section>
-
-        <!-- Comandas -->
-        <section id="comandas" class="section">
-            <h1>Gerenciar Comandas</h1>
-            <div class="card">
-                <div class="alert alert-success hidden" id="comanda-success"></div>
-                <div class="alert alert-danger hidden" id="comanda-error"></div>
-                <div class="form-group">
-                    <label for="cliente">Nome do Cliente</label>
-                    <input type="text" id="cliente" placeholder="Nome do cliente">
-                </div>
-                <button class="btn btn-primary" id="criar-comanda">Criar Nova Comanda</button>
-            </div>
-            <div class="card">
-                <h2>Comandas Ativas</h2>
-                <div id="comandas-lista"></div>
             </div>
         </section>
 
@@ -288,34 +215,32 @@
                 <div class="alert alert-success hidden" id="produto-success"></div>
                 <div class="alert alert-danger hidden" id="produto-error"></div>
                 <div class="form-group">
-                    <label for="nome-produto">Nome do Produto</label>
-                    <input type="text" id="nome-produto" placeholder="Nome do produto">
+                    <label>Nome do Produto</label>
+                    <input type="text" id="nome-produto">
                 </div>
                 <div class="form-group">
-                    <label for="categoria">Categoria</label>
+                    <label>Categoria</label>
                     <select id="categoria">
-                        <option value="">Selecione uma categoria</option>
+                        <option value="">Selecione</option>
                         <option value="Espeto">Espeto</option>
-                        <option value="Copos">Copos</option>
                         <option value="Bebidas">Bebidas</option>
-                        <option value="Facas">Facas</option>
-                        <option value="Itens para Churrasco">Itens para Churrasco</option>
-                        <option value="Espeto Congelado">Espeto Congelado</option>
+                        <option value="Copos">Copos</option>
                     </select>
                 </div>
                 <div class="form-group">
-                    <label for="preco">Preço (R$)</label>
-                    <input type="number" id="preco" min="0" step="0.01" placeholder="Preço do produto">
+                    <label>Preço (R$)</label>
+                    <input type="number" id="preco" step="0.01">
                 </div>
                 <div class="form-group">
-                    <label for="descricao">Descrição</label>
-                    <textarea id="descricao" rows="3" placeholder="Descrição do produto"></textarea>
+                    <label>Descrição</label>
+                    <textarea id="descricao" rows="3"></textarea>
                 </div>
                 <button class="btn btn-primary" id="adicionar-produto">Adicionar Produto</button>
             </div>
             <div class="card">
                 <h2>Produtos Cadastrados</h2>
-                <table>
+                <div id="loading-produtos" class="loading hidden">Carregando...</div>
+                <table id="tabela-produtos">
                     <thead>
                         <tr>
                             <th>Nome</th>
@@ -324,9 +249,26 @@
                             <th>Ações</th>
                         </tr>
                     </thead>
-                    <tbody id="lista-produtos">
-                    </tbody>
+                    <tbody></tbody>
                 </table>
+            </div>
+        </section>
+
+        <!-- Comandas -->
+        <section id="comandas" class="section">
+            <h1>Gerenciar Comandas</h1>
+            <div class="card">
+                <div class="alert alert-success hidden" id="comanda-success"></div>
+                <div class="form-group">
+                    <label>Nome do Cliente</label>
+                    <input type="text" id="cliente">
+                </div>
+                <button class="btn btn-primary" id="criar-comanda">Criar Nova Comanda</button>
+            </div>
+            <div class="card">
+                <h2>Comandas Ativas</h2>
+                <div id="loading-comandas" class="loading hidden">Carregando...</div>
+                <div id="comandas-lista"></div>
             </div>
         </section>
 
@@ -334,43 +276,29 @@
         <section id="relatorios" class="section">
             <h1>Relatórios de Vendas</h1>
             <div class="card">
-                <div class="form-row">
-                    <div class="form-group">
-                        <label for="data-inicio">Data de Início</label>
-                        <input type="date" id="data-inicio">
-                    </div>
-                    <div class="form-group">
-                        <label for="data-fim">Data de Fim</label>
-                        <input type="date" id="data-fim">
-                    </div>
+                <div class="form-group">
+                    <label>Data Início</label>
+                    <input type="date" id="data-inicio">
                 </div>
-                <div class="form-row">
-                    <div class="form-group">
-                        <button class="btn btn-primary" id="filtrar-relatorio">Filtrar</button>
-                    </div>
-                    <div class="form-group">
-                        <button class="btn btn-success" id="exportar-relatorio">Exportar para CSV</button>
-                    </div>
-                    <div class="form-group">
-                        <button class="btn btn-warning" id="sincronizar-sheets">Sincronizar com Google Sheets</button>
-                    </div>
+                <div class="form-group">
+                    <label>Data Fim</label>
+                    <input type="date" id="data-fim">
                 </div>
+                <button class="btn btn-primary" id="filtrar-relatorio">Filtrar</button>
             </div>
             <div class="card">
-                <h2>Vendas Realizadas</h2>
-                <table>
+                <h2>Vendas</h2>
+                <div id="loading-vendas" class="loading hidden">Carregando...</div>
+                <table id="tabela-vendas">
                     <thead>
                         <tr>
                             <th>Data</th>
-                            <th>Comanda</th>
                             <th>Cliente</th>
                             <th>Total</th>
                             <th>Pagamento</th>
-                            <th>Ações</th>
                         </tr>
                     </thead>
-                    <tbody id="relatorio-vendas">
-                    </tbody>
+                    <tbody></tbody>
                 </table>
             </div>
         </section>
@@ -379,527 +307,370 @@
         <section id="configuracoes" class="section">
             <h1>Configurações</h1>
             <div class="card">
-                <h2>Integração com Google Sheets</h2>
-                <div class="config-section">
-                    <div class="form-group">
-                        <label for="sheets-url">URL do Google Apps Script</label>
-                        <input type="text" id="sheets-url" placeholder="https://script.google.com/macros/s/AKfycbxzGI9hMfaiBmeGlrvadZSYnEAnMcL5yg41Zh1PxvmUHU3cWD4n346GOXMcbmQ7BD3C/exec">
-                        <small style="color: #777;">Exemplo: https://script.google.com/macros/s/SEU_ID/exec</small>
-                    </div>
-                    <div class="form-group">
-                        <label>
-                            <input type="checkbox" id="auto-sync">
-                            Sincronizar automaticamente ao fechar comandas
-                        </label>
-                    </div>
-                    <div class="form-row">
-                        <div class="form-group">
-                            <button class="btn btn-primary" id="salvar-config">Salvar Configurações</button>
-                        </div>
-                        <div class="form-group">
-                            <button class="btn btn-success" id="testar-conexao">Testar Conexão</button>
-                        </div>
-                    </div>
-                    <div id="status-conexao" class="hidden" style="margin-top: 15px;">
-                        <p><span class="status-indicator"></span> <span id="status-texto"></span></p>
-                    </div>
+                <div class="alert alert-success hidden" id="config-success"></div>
+                <div class="form-group">
+                    <label>URL do Google Apps Script</label>
+                    <input type="text" id="sheets-url" placeholder="https://script.google.com/macros/s/...">
+                    <small>Cole aqui a URL de implantação do seu Google Apps Script</small>
                 </div>
+                <button class="btn btn-primary" id="salvar-config">Salvar Configurações</button>
+                <button class="btn btn-success" id="testar-conexao">Testar Conexão</button>
             </div>
         </section>
     </div>
 
     <script>
-        // Variáveis globais
-        let produtoEditando = null;
+        // Variável global para a URL do Google Apps Script
+        let SCRIPT_URL = '';
 
-        // Navegação entre seções
+        // Carregar configuração ao iniciar
+        function carregarConfig() {
+            const config = localStorage.getItem('sheetsConfig');
+            if (config) {
+                const { sheetsUrl } = JSON.parse(config);
+                SCRIPT_URL = sheetsUrl;
+                document.getElementById('sheets-url').value = sheetsUrl;
+            }
+        }
+
+        // Salvar configuração
+        document.getElementById('salvar-config').addEventListener('click', function() {
+            const sheetsUrl = document.getElementById('sheets-url').value.trim();
+            if (!sheetsUrl) {
+                alert('Por favor, insira a URL do Google Apps Script');
+                return;
+            }
+            localStorage.setItem('sheetsConfig', JSON.stringify({ sheetsUrl }));
+            SCRIPT_URL = sheetsUrl;
+            mostrarAlerta('config-success', 'Configurações salvas com sucesso!');
+        });
+
+        // Testar conexão
+        document.getElementById('testar-conexao').addEventListener('click', async function() {
+            if (!SCRIPT_URL) {
+                alert('Configure a URL primeiro');
+                return;
+            }
+            try {
+                const response = await fetch(`${SCRIPT_URL}?acao=testar`);
+                const data = await response.json();
+                if (data.sucesso) {
+                    alert('✅ Conexão estabelecida com sucesso!');
+                } else {
+                    alert('❌ Erro na conexão: ' + data.mensagem);
+                }
+            } catch (error) {
+                alert('❌ Erro ao conectar: ' + error.message);
+            }
+        });
+
+        // ========== PRODUTOS ==========
+        document.getElementById('adicionar-produto').addEventListener('click', async function() {
+            if (!SCRIPT_URL) {
+                alert('Configure a URL do Google Apps Script primeiro');
+                return;
+            }
+
+            const produto = {
+                nome: document.getElementById('nome-produto').value,
+                categoria: document.getElementById('categoria').value,
+                preco: parseFloat(document.getElementById('preco').value),
+                descricao: document.getElementById('descricao').value
+            };
+
+            if (!produto.nome || !produto.categoria || !produto.preco) {
+                alert('Preencha todos os campos obrigatórios');
+                return;
+            }
+
+            try {
+                const response = await fetch(SCRIPT_URL, {
+                    method: 'POST',
+                    body: JSON.stringify({ acao: 'salvarProduto', produto })
+                });
+                const data = await response.json();
+
+                if (data.sucesso) {
+                    mostrarAlerta('produto-success', 'Produto salvo com sucesso!');
+                    document.getElementById('nome-produto').value = '';
+                    document.getElementById('categoria').value = '';
+                    document.getElementById('preco').value = '';
+                    document.getElementById('descricao').value = '';
+                    carregarProdutos();
+                } else {
+                    mostrarAlerta('produto-error', 'Erro: ' + data.mensagem);
+                }
+            } catch (error) {
+                mostrarAlerta('produto-error', 'Erro ao salvar: ' + error.message);
+            }
+        });
+
+        async function carregarProdutos() {
+            if (!SCRIPT_URL) return;
+
+            document.getElementById('loading-produtos').classList.remove('hidden');
+            try {
+                const response = await fetch(`${SCRIPT_URL}?acao=listarProdutos`);
+                const data = await response.json();
+
+                const tbody = document.querySelector('#tabela-produtos tbody');
+                tbody.innerHTML = '';
+
+                if (data.produtos && data.produtos.length > 0) {
+                    data.produtos.forEach(produto => {
+                        const tr = document.createElement('tr');
+                        tr.innerHTML = `
+                            <td>${produto.nome}</td>
+                            <td>${produto.categoria}</td>
+                            <td>R$ ${produto.preco.toFixed(2)}</td>
+                            <td>
+                                <button class="btn btn-danger" onclick="excluirProduto('${produto.id}')">Excluir</button>
+                            </td>
+                        `;
+                        tbody.appendChild(tr);
+                    });
+                }
+            } catch (error) {
+                console.error('Erro ao carregar produtos:', error);
+            } finally {
+                document.getElementById('loading-produtos').classList.add('hidden');
+            }
+        }
+
+        window.excluirProduto = async function(id) {
+            if (!confirm('Deseja realmente excluir este produto?')) return;
+
+            try {
+                const response = await fetch(SCRIPT_URL, {
+                    method: 'POST',
+                    body: JSON.stringify({ acao: 'excluirProduto', id })
+                });
+                const data = await response.json();
+
+                if (data.sucesso) {
+                    carregarProdutos();
+                } else {
+                    alert('Erro: ' + data.mensagem);
+                }
+            } catch (error) {
+                alert('Erro ao excluir: ' + error.message);
+            }
+        };
+
+        // ========== COMANDAS ==========
+        document.getElementById('criar-comanda').addEventListener('click', async function() {
+            if (!SCRIPT_URL) {
+                alert('Configure a URL do Google Apps Script primeiro');
+                return;
+            }
+
+            const cliente = document.getElementById('cliente').value;
+
+            const comanda = {
+                cliente: cliente || 'Não informado',
+                itens: []
+            };
+
+            try {
+                const response = await fetch(SCRIPT_URL, {
+                    method: 'POST',
+                    body: JSON.stringify({ acao: 'salvarComanda', comanda })
+                });
+                const data = await response.json();
+
+                if (data.sucesso) {
+                    mostrarAlerta('comanda-success', 'Comanda criada com sucesso!');
+                    document.getElementById('cliente').value = '';
+                    carregarComandas();
+                } else {
+                    alert('Erro: ' + data.mensagem);
+                }
+            } catch (error) {
+                alert('Erro ao criar comanda: ' + error.message);
+            }
+        });
+
+        async function carregarComandas() {
+            if (!SCRIPT_URL) return;
+
+            document.getElementById('loading-comandas').classList.remove('hidden');
+            try {
+                const response = await fetch(`${SCRIPT_URL}?acao=listarComandas`);
+                const data = await response.json();
+
+                const lista = document.getElementById('comandas-lista');
+                lista.innerHTML = '';
+
+                if (data.comandas && data.comandas.length > 0) {
+                    data.comandas.forEach(comanda => {
+                        const div = document.createElement('div');
+                        div.className = 'card';
+                        div.innerHTML = `
+                            <h3>Comanda #${comanda.id}</h3>
+                            <p><strong>Cliente:</strong> ${comanda.cliente}</p>
+                            <p><strong>Itens:</strong> ${comanda.itens.length}</p>
+                            <button class="btn btn-success" onclick="fecharComanda('${comanda.id}', '${comanda.cliente}', ${comanda.itens.length})">Fechar Comanda</button>
+                            <button class="btn btn-danger" onclick="excluirComanda('${comanda.id}')">Cancelar</button>
+                        `;
+                        lista.appendChild(div);
+                    });
+                } else {
+                    lista.innerHTML = '<p>Nenhuma comanda ativa</p>';
+                }
+            } catch (error) {
+                console.error('Erro ao carregar comandas:', error);
+            } finally {
+                document.getElementById('loading-comandas').classList.add('hidden');
+            }
+        }
+
+        window.fecharComanda = async function(comandaId, cliente, qtdItens) {
+            const total = prompt('Digite o valor total da comanda:');
+            if (!total) return;
+
+            const formaPagamento = prompt('Forma de pagamento (dinheiro/pix/debito/credito):');
+            if (!formaPagamento) return;
+
+            const venda = {
+                id: 'V_' + Date.now(),
+                comandaId,
+                cliente,
+                data: new Date().toISOString(),
+                total: parseFloat(total),
+                formaPagamento,
+                itens: [] // Simplificado para este exemplo
+            };
+
+            try {
+                const response = await fetch(SCRIPT_URL, {
+                    method: 'POST',
+                    body: JSON.stringify({ acao: 'salvarVenda', venda })
+                });
+                const data = await response.json();
+
+                if (data.sucesso) {
+                    alert('Venda registrada com sucesso!');
+                    carregarComandas();
+                    atualizarDashboard();
+                } else {
+                    alert('Erro: ' + data.mensagem);
+                }
+            } catch (error) {
+                alert('Erro ao fechar comanda: ' + error.message);
+            }
+        };
+
+        window.excluirComanda = async function(id) {
+            if (!confirm('Deseja realmente cancelar esta comanda?')) return;
+
+            try {
+                const response = await fetch(SCRIPT_URL, {
+                    method: 'POST',
+                    body: JSON.stringify({ acao: 'excluirComanda', id })
+                });
+                const data = await response.json();
+
+                if (data.sucesso) {
+                    carregarComandas();
+                } else {
+                    alert('Erro: ' + data.mensagem);
+                }
+            } catch (error) {
+                alert('Erro ao excluir: ' + error.message);
+            }
+        };
+
+        // ========== RELATÓRIOS ==========
+        document.getElementById('filtrar-relatorio').addEventListener('click', carregarVendas);
+
+        async function carregarVendas() {
+            if (!SCRIPT_URL) return;
+
+            const dataInicio = document.getElementById('data-inicio').value;
+            const dataFim = document.getElementById('data-fim').value;
+
+            document.getElementById('loading-vendas').classList.remove('hidden');
+            try {
+                const response = await fetch(`${SCRIPT_URL}?acao=listarVendas&dataInicio=${dataInicio}&dataFim=${dataFim}`);
+                const data = await response.json();
+
+                const tbody = document.querySelector('#tabela-vendas tbody');
+                tbody.innerHTML = '';
+
+                if (data.vendas && data.vendas.length > 0) {
+                    data.vendas.forEach(venda => {
+                        const tr = document.createElement('tr');
+                        tr.innerHTML = `
+                            <td>${venda.data}</td>
+                            <td>${venda.cliente}</td>
+                            <td>R$ ${venda.total.toFixed(2)}</td>
+                            <td>${venda.formaPagamento}</td>
+                        `;
+                        tbody.appendChild(tr);
+                    });
+                } else {
+                    tbody.innerHTML = '<tr><td colspan="4" style="text-align:center">Nenhuma venda encontrada</td></tr>';
+                }
+            } catch (error) {
+                console.error('Erro ao carregar vendas:', error);
+            } finally {
+                document.getElementById('loading-vendas').classList.add('hidden');
+            }
+        }
+
+        // ========== DASHBOARD ==========
+        async function atualizarDashboard() {
+            if (!SCRIPT_URL) return;
+
+            try {
+                // Carregar produtos
+                const respProdutos = await fetch(`${SCRIPT_URL}?acao=listarProdutos`);
+                const dataProdutos = await respProdutos.json();
+                document.getElementById('total-produtos').textContent = dataProdutos.produtos?.length || 0;
+
+                // Carregar comandas
+                const respComandas = await fetch(`${SCRIPT_URL}?acao=listarComandas`);
+                const dataComandas = await respComandas.json();
+                document.getElementById('total-comandas').textContent = dataComandas.comandas?.length || 0;
+
+                // Carregar vendas
+                const respVendas = await fetch(`${SCRIPT_URL}?acao=listarVendas`);
+                const dataVendas = await respVendas.json();
+                const totalVendas = dataVendas.vendas?.reduce((sum, v) => sum + v.total, 0) || 0;
+                document.getElementById('total-vendas').textContent = `R$ ${totalVendas.toFixed(2)}`;
+            } catch (error) {
+                console.error('Erro ao atualizar dashboard:', error);
+            }
+        }
+
+        // ========== NAVEGAÇÃO ==========
         document.querySelectorAll('.nav-link').forEach(link => {
             link.addEventListener('click', function(e) {
                 e.preventDefault();
                 document.querySelectorAll('.nav-link').forEach(l => l.classList.remove('active'));
                 this.classList.add('active');
+
                 document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
-                document.getElementById(this.getAttribute('data-section')).classList.add('active');
+                document.getElementById(this.dataset.section).classList.add('active');
             });
         });
 
-        // Funções de Produtos
-        function adicionarProduto() {
-            const nome = document.getElementById('nome-produto').value.trim();
-            const categoria = document.getElementById('categoria').value;
-            const preco = parseFloat(document.getElementById('preco').value);
-            const descricao = document.getElementById('descricao').value.trim();
-
-            if (!nome || !categoria || !preco) {
-                mostrarAlerta('produto-error', 'Preencha todos os campos obrigatórios.');
-                return;
-            }
-
-            const produtos = JSON.parse(localStorage.getItem('produtos')) || [];
-
-            if (produtoEditando !== null) {
-                produtos[produtoEditando] = { id: produtos[produtoEditando].id, nome, categoria, preco, descricao };
-                mostrarAlerta('produto-success', 'Produto atualizado com sucesso!');
-                produtoEditando = null;
-                document.getElementById('adicionar-produto').textContent = 'Adicionar Produto';
-                document.getElementById('cancelar-edicao').classList.add('hidden');
-            } else {
-                const id = Date.now();
-                produtos.push({ id, nome, categoria, preco, descricao });
-                mostrarAlerta('produto-success', 'Produto adicionado com sucesso!');
-            }
-
-            localStorage.setItem('produtos', JSON.stringify(produtos));
-            limparFormularioProduto();
-            carregarProdutos();
-            atualizarDashboard();
-        }
-
-        function limparFormularioProduto() {
-            document.getElementById('nome-produto').value = '';
-            document.getElementById('categoria').value = '';
-            document.getElementById('preco').value = '';
-            document.getElementById('descricao').value = '';
-        }
-
-        function carregarProdutos() {
-            const produtos = JSON.parse(localStorage.getItem('produtos')) || [];
-            const lista = document.getElementById('lista-produtos');
-            lista.innerHTML = '';
-
-            if (produtos.length === 0) {
-                lista.innerHTML = '<tr><td colspan="4" style="text-align: center;">Nenhum produto cadastrado</td></tr>';
-                return;
-            }
-
-            produtos.forEach((produto, index) => {
-                const tr = document.createElement('tr');
-                tr.innerHTML = `
-                    <td>${produto.nome}</td>
-                    <td>${produto.categoria}</td>
-                    <td>R$ ${produto.preco.toFixed(2)}</td>
-                    <td>
-                        <button class="btn btn-warning" onclick="editarProduto(${index})">Editar</button>
-                        <button class="btn btn-danger" onclick="deletarProduto(${index})">Deletar</button>
-                    </td>
-                `;
-                lista.appendChild(tr);
-            });
-        }
-
-        function editarProduto(index) {
-            const produtos = JSON.parse(localStorage.getItem('produtos')) || [];
-            const produto = produtos[index];
-
-            document.getElementById('nome-produto').value = produto.nome;
-            document.getElementById('categoria').value = produto.categoria;
-            document.getElementById('preco').value = produto.preco;
-            document.getElementById('descricao').value = produto.descricao;
-
-            produtoEditando = index;
-            document.getElementById('adicionar-produto').textContent = 'Atualizar Produto';
-            document.getElementById('cancelar-edicao').classList.remove('hidden');
-        }
-
-        function cancelarEdicao() {
-            produtoEditando = null;
-            limparFormularioProduto();
-            document.getElementById('adicionar-produto').textContent = 'Adicionar Produto';
-            document.getElementById('cancelar-edicao').classList.add('hidden');
-        }
-
-        function deletarProduto(index) {
-            if (confirm('Tem certeza que deseja deletar este produto?')) {
-                const produtos = JSON.parse(localStorage.getItem('produtos')) || [];
-                produtos.splice(index, 1);
-                localStorage.setItem('produtos', JSON.stringify(produtos));
-                carregarProdutos();
-                atualizarDashboard();
-            }
-        }
-
-        // Funções de Comandas
-        function criarComanda() {
-            const cliente = document.getElementById('cliente').value.trim();
-
-            const comandas = JSON.parse(localStorage.getItem('comandas')) || [];
-            const id = `C${Date.now()}`;
-
-            comandas.push({
-                id,
-                cliente: cliente || 'Cliente não informado',
-                itens: [],
-                data: new Date().toISOString()
-            });
-
-            localStorage.setItem('comandas', JSON.stringify(comandas));
-            document.getElementById('cliente').value = '';
-            mostrarAlerta('comanda-success', `Comanda #${id} criada com sucesso!`);
-            carregarComandas();
-            atualizarDashboard();
-        }
-
-        function carregarComandas() {
-            const comandas = JSON.parse(localStorage.getItem('comandas')) || [];
-            const lista = document.getElementById('comandas-lista');
-            lista.innerHTML = '';
-
-            if (comandas.length === 0) {
-                lista.innerHTML = '<p>Nenhuma comanda ativa</p>';
-                return;
-            }
-
-            comandas.forEach((comanda, index) => {
-                const total = comanda.itens.reduce((sum, item) => sum + (item.preco * item.quantidade), 0);
-                const div = document.createElement('div');
-                div.className = 'card';
-                div.innerHTML = `
-                    <h3>Comanda #${comanda.id}</h3>
-                    <p><strong>Cliente:</strong> ${comanda.cliente}</p>
-                    <p><strong>Total:</strong> R$ ${total.toFixed(2)}</p>
-                    <p><strong>Itens:</strong> ${comanda.itens.length}</p>
-                    <button class="btn btn-primary" onclick="gerenciarComanda(${index})">Gerenciar</button>
-                    <button class="btn btn-success" onclick="fecharComanda(${index})">Fechar Comanda</button>
-                    <button class="btn btn-danger" onclick="cancelarComanda(${index})">Cancelar</button>
-                `;
-                lista.appendChild(div);
-            });
-        }
-
-        function gerenciarComanda(index) {
-            alert('Função de gerenciamento de comanda em desenvolvimento');
-        }
-
-        function fecharComanda(index) {
-            const comandas = JSON.parse(localStorage.getItem('comandas')) || [];
-            const comanda = comandas[index];
-
-            if (comanda.itens.length === 0) {
-                alert('Não é possível fechar uma comanda sem itens.');
-                return;
-            }
-
-            const total = comanda.itens.reduce((sum, item) => sum + (item.preco * item.quantidade), 0);
-            const formaPagamento = prompt('Forma de pagamento:\n1 - Dinheiro\n2 - PIX\n3 - Débito\n4 - Crédito');
-
-            let pagamento = '';
-            switch(formaPagamento) {
-                case '1': pagamento = 'dinheiro'; break;
-                case '2': pagamento = 'pix'; break;
-                case '3': pagamento = 'debito'; break;
-                case '4': pagamento = 'credito'; break;
-                default: 
-                    alert('Forma de pagamento inválida');
-                    return;
-            }
-
-            // Registrar venda
-            const vendas = JSON.parse(localStorage.getItem('vendas')) || [];
-            const venda = {
-                id: `V${Date.now()}`,
-                comandaId: comanda.id,
-                cliente: comanda.cliente,
-                itens: [...comanda.itens],
-                total: total,
-                formaPagamento: pagamento,
-                data: new Date().toISOString()
-            };
-            vendas.push(venda);
-            localStorage.setItem('vendas', JSON.stringify(vendas));
-
-            // Salvar no Google Sheets se configurado
-            salvarVendaNoSheets(venda);
-
-            // Remover comanda
-            comandas.splice(index, 1);
-            localStorage.setItem('comandas', JSON.stringify(comandas));
-
-            alert(`Comanda fechada com sucesso! Total: R$ ${total.toFixed(2)}`);
-            carregarComandas();
-            atualizarDashboard();
-        }
-
-        function cancelarComanda(index) {
-            if (confirm('Tem certeza que deseja cancelar esta comanda?')) {
-                const comandas = JSON.parse(localStorage.getItem('comandas')) || [];
-                comandas.splice(index, 1);
-                localStorage.setItem('comandas', JSON.stringify(comandas));
-                carregarComandas();
-                atualizarDashboard();
-            }
-        }
-
-        // Funções de Relatórios
-        function carregarRelatorios() {
-            const vendas = JSON.parse(localStorage.getItem('vendas')) || [];
-            const tabela = document.getElementById('relatorio-vendas');
-            tabela.innerHTML = '';
-
-            if (vendas.length === 0) {
-                tabela.innerHTML = '<tr><td colspan="6" style="text-align: center;">Nenhuma venda encontrada</td></tr>';
-                return;
-            }
-
-            vendas.forEach((venda, index) => {
-                const data = new Date(venda.data);
-                const dataFormatada = data.toLocaleDateString('pt-BR');
-
-                let pagamentoFormatado = '';
-                switch(venda.formaPagamento) {
-                    case 'dinheiro':
-                        pagamentoFormatado = '<span class="badge badge-success">Dinheiro</span>';
-                        break;
-                    case 'pix':
-                        pagamentoFormatado = '<span class="badge badge-info">PIX</span>';
-                        break;
-                    case 'debito':
-                        pagamentoFormatado = '<span class="badge badge-warning">Débito</span>';
-                        break;
-                    case 'credito':
-                        pagamentoFormatado = '<span class="badge badge-danger">Crédito</span>';
-                        break;
-                    default:
-                        pagamentoFormatado = '<span class="badge">N/A</span>';
-                }
-
-                const tr = document.createElement('tr');
-                tr.innerHTML = `
-                    <td>${dataFormatada}</td>
-                    <td>#${venda.comandaId}</td>
-                    <td>${venda.cliente || 'Cliente não informado'}</td>
-                    <td>R$ ${venda.total.toFixed(2)}</td>
-                    <td>${pagamentoFormatado}</td>
-                    <td>
-                        <button class="btn btn-primary" onclick="verDetalhesVenda(${index})">Ver Detalhes</button>
-                    </td>
-                `;
-                tabela.appendChild(tr);
-            });
-        }
-
-        function verDetalhesVenda(index) {
-            const vendas = JSON.parse(localStorage.getItem('vendas')) || [];
-            const venda = vendas[index];
-
-            let detalhes = `Comanda: #${venda.comandaId}\n`;
-            detalhes += `Cliente: ${venda.cliente}\n`;
-            detalhes += `Data: ${new Date(venda.data).toLocaleString('pt-BR')}\n`;
-            detalhes += `Forma de Pagamento: ${venda.formaPagamento}\n\n`;
-            detalhes += `Itens:\n`;
-            venda.itens.forEach(item => {
-                detalhes += `- ${item.quantidade}x ${item.nome} (R$ ${item.preco.toFixed(2)}) = R$ ${(item.preco * item.quantidade).toFixed(2)}\n`;
-            });
-            detalhes += `\nTotal: R$ ${venda.total.toFixed(2)}`;
-
-            alert(detalhes);
-        }
-
-        function exportarRelatorio() {
-            const vendas = JSON.parse(localStorage.getItem('vendas')) || [];
-
-            if (vendas.length === 0) {
-                alert('Nenhuma venda para exportar.');
-                return;
-            }
-
-            let csv = 'Data,Comanda,Cliente,Total,Forma de Pagamento\n';
-            vendas.forEach(venda => {
-                const data = new Date(venda.data);
-                const dataFormatada = data.toLocaleDateString('pt-BR');
-                csv += `"${dataFormatada}","${venda.comandaId}","${venda.cliente || ''}","${venda.total.toFixed(2)}","${venda.formaPagamento}"\n`;
-            });
-
-            const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
-            const url = URL.createObjectURL(blob);
-            const link = document.createElement('a');
-            link.setAttribute('href', url);
-            link.setAttribute('download', `relatorio_vendas_${new Date().toISOString().split('T')[0]}.csv`);
-            link.style.visibility = 'hidden';
-            document.body.appendChild(link);
-            link.click();
-            document.body.removeChild(link);
-        }
-
-        // Funções de Dashboard
-        function atualizarDashboard() {
-            const produtos = JSON.parse(localStorage.getItem('produtos')) || [];
-            const comandas = JSON.parse(localStorage.getItem('comandas')) || [];
-            const vendas = JSON.parse(localStorage.getItem('vendas')) || [];
-
-            const totalVendas = vendas.reduce((sum, venda) => sum + venda.total, 0);
-            document.getElementById('total-vendas').textContent = `R$ ${totalVendas.toFixed(2)}`;
-            document.getElementById('total-comandas').textContent = comandas.length;
-            document.getElementById('total-produtos').textContent = produtos.length;
-
-            const hoje = new Date().toISOString().split('T')[0];
-            const vendasHoje = vendas.filter(venda => venda.data.startsWith(hoje)).length;
-            document.getElementById('vendas-hoje').textContent = vendasHoje;
-        }
-
-        // Funções de Integração com Google Sheets
-        function salvarConfiguracoes() {
-            const sheetsUrl = document.getElementById('sheets-url').value.trim();
-            const autoSync = document.getElementById('auto-sync').checked;
-
-            if (!sheetsUrl) {
-                alert('Por favor, insira a URL do Google Apps Script.');
-                return;
-            }
-
-            const config = {
-                sheetsUrl,
-                autoSync
-            };
-
-            localStorage.setItem('sheetsConfig', JSON.stringify(config));
-            alert('Configurações salvas com sucesso!');
-        }
-
-        function carregarConfiguracoes() {
-            const config = JSON.parse(localStorage.getItem('sheetsConfig')) || {};
-
-            if (config.sheetsUrl) {
-                document.getElementById('sheets-url').value = config.sheetsUrl;
-            }
-            if (config.autoSync !== undefined) {
-                document.getElementById('auto-sync').checked = config.autoSync;
-            }
-        }
-
-        async function testarConexaoSheets() {
-            const config = JSON.parse(localStorage.getItem('sheetsConfig')) || {};
-
-            if (!config.sheetsUrl) {
-                mostrarStatusConexao(false, 'Configure a URL do Google Apps Script primeiro.');
-                return;
-            }
-
-            try {
-                const response = await fetch(config.sheetsUrl);
-                const data = await response.json();
-
-                if (data.status === 'OK') {
-                    mostrarStatusConexao(true, 'Conexão estabelecida com sucesso!');
-                } else {
-                    mostrarStatusConexao(false, 'Erro na resposta do servidor.');
-                }
-            } catch (error) {
-                mostrarStatusConexao(false, `Erro ao conectar: ${error.message}`);
-            }
-        }
-
-        function mostrarStatusConexao(sucesso, mensagem) {
-            const statusDiv = document.getElementById('status-conexao');
-            const statusTexto = document.getElementById('status-texto');
-            const indicator = statusDiv.querySelector('.status-indicator');
-
-            statusTexto.textContent = mensagem;
-            indicator.className = 'status-indicator ' + (sucesso ? 'status-ok' : 'status-error');
-            statusDiv.classList.remove('hidden');
-
-            setTimeout(() => {
-                statusDiv.classList.add('hidden');
-            }, 5000);
-        }
-
-        async function salvarVendaNoSheets(venda) {
-            const config = JSON.parse(localStorage.getItem('sheetsConfig')) || {};
-
-            if (!config.sheetsUrl || !config.autoSync) {
-                return; // Não faz nada se não estiver configurado ou auto-sync desabilitado
-            }
-
-            try {
-                const response = await fetch(config.sheetsUrl, {
-                    method: 'POST',
-                    mode: 'no-cors', // Importante para evitar erros de CORS
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify({ venda })
-                });
-
-                console.log('Venda enviada para o Google Sheets');
-            } catch (error) {
-                console.error('Erro ao enviar venda para o Google Sheets:', error);
-            }
-        }
-
-        async function sincronizarTodasVendas() {
-            const config = JSON.parse(localStorage.getItem('sheetsConfig')) || {};
-
-            if (!config.sheetsUrl) {
-                alert('Configure a URL do Google Apps Script primeiro.');
-                return;
-            }
-
-            const vendas = JSON.parse(localStorage.getItem('vendas')) || [];
-
-            if (vendas.length === 0) {
-                alert('Nenhuma venda para sincronizar.');
-                return;
-            }
-
-            if (!confirm(`Deseja sincronizar ${vendas.length} venda(s) com o Google Sheets?`)) {
-                return;
-            }
-
-            let sucesso = 0;
-            let erro = 0;
-
-            for (const venda of vendas) {
-                try {
-                    await fetch(config.sheetsUrl, {
-                        method: 'POST',
-                        mode: 'no-cors',
-                        headers: {
-                            'Content-Type': 'application/json',
-                        },
-                        body: JSON.stringify({ venda })
-                    });
-                    sucesso++;
-                } catch (error) {
-                    erro++;
-                    console.error('Erro ao sincronizar venda:', error);
-                }
-            }
-
-            alert(`Sincronização concluída!\nSucesso: ${sucesso}\nErros: ${erro}`);
-        }
-
-        // Funções auxiliares
+        // ========== FUNÇÕES AUXILIARES ==========
         function mostrarAlerta(id, mensagem) {
             const alerta = document.getElementById(id);
             alerta.textContent = mensagem;
             alerta.classList.remove('hidden');
-            setTimeout(() => {
-                alerta.classList.add('hidden');
-            }, 5000);
+            setTimeout(() => alerta.classList.add('hidden'), 5000);
         }
 
-        // Inicialização
+        // ========== INICIALIZAÇÃO ==========
         document.addEventListener('DOMContentLoaded', function() {
-            document.getElementById('adicionar-produto').addEventListener('click', adicionarProduto);
-            document.getElementById('cancelar-edicao').addEventListener('click', cancelarEdicao);
-            document.getElementById('criar-comanda').addEventListener('click', criarComanda);
-            document.getElementById('filtrar-relatorio').addEventListener('click', carregarRelatorios);
-            document.getElementById('exportar-relatorio').addEventListener('click', exportarRelatorio);
-            document.getElementById('sincronizar-sheets').addEventListener('click', sincronizarTodasVendas);
-            document.getElementById('salvar-config').addEventListener('click', salvarConfiguracoes);
-            document.getElementById('testar-conexao').addEventListener('click', testarConexaoSheets);
-
-            carregarProdutos();
-            carregarComandas();
-            carregarRelatorios();
-            carregarConfiguracoes();
-            atualizarDashboard();
-
-            // Configurar data padrão para relatórios (últimos 7 dias)
-            const dataFim = new Date();
-            const dataInicio = new Date();
-            dataInicio.setDate(dataInicio.getDate() - 7);
-            document.getElementById('data-inicio').value = dataInicio.toISOString().split('T')[0];
-            document.getElementById('data-fim').value = dataFim.toISOString().split('T')[0];
+            carregarConfig();
+            if (SCRIPT_URL) {
+                carregarProdutos();
+                carregarComandas();
+                atualizarDashboard();
+            }
         });
     </script>
 </body>
