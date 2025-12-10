@@ -843,95 +843,6 @@
         </footer>
     </div>
 
-    <!-- MODAL DE BACKUP -->
-    <div id="backup-modal" class="modal">
-        <div class="modal-content">
-            <h2><i class="fas fa-save"></i> Backup e Restauração</h2>
-            <p>Gerencie seus backups e restaure dados anteriores.</p>
-            
-            <div class="tips" style="margin: 20px 0;">
-                <h4>Backups Disponíveis:</h4>
-                <div id="backup-list">
-                    <p>Carregando backups...</p>
-                </div>
-            </div>
-            
-            <div class="modal-buttons">
-                <button onclick="createBackup()" class="btn-export">
-                    <i class="fas fa-plus"></i> Criar Backup
-                </button>
-                <button onclick="closeModal('backup-modal')" class="btn-clear">
-                    <i class="fas fa-times"></i> Fechar
-                </button>
-            </div>
-        </div>
-    </div>
-
-    <!-- MODAL DE AJUDA -->
-    <div id="help-modal" class="modal">
-        <div class="modal-content">
-            <h2><i class="fas fa-question-circle"></i> Ajuda</h2>
-            
-            <div class="tips">
-                <h3>Como usar:</h3>
-                <ul>
-                    <li><strong>Adicionar produto:</strong> Preencha os campos e clique em "Adicionar à Lista"</li>
-                    <li><strong>Editar produto:</strong> Clique no botão verde de edição na lista</li>
-                    <li><strong>Excluir produto:</strong> Clique no botão vermelho de lixeira</li>
-                    <li><strong>Dashboard:</strong> Clique em "Dashboard de Gastos" para ver análises detalhadas</li>
-                    <li><strong>Exportar:</strong> Salve sua lista em um arquivo JSON</li>
-                    <li><strong>Importar:</strong> Carregue uma lista salva anteriormente</li>
-                </ul>
-            </div>
-            
-            <div class="tips">
-                <h3>Atalhos de Teclado:</h3>
-                <ul>
-                    <li><strong>Ctrl + S:</strong> Exportar lista</li>
-                    <li><strong>Ctrl + L:</strong> Limpar formulário</li>
-                    <li><strong>Escape:</strong> Fechar modais</li>
-                    <li><strong>Enter:</strong> Adicionar produto (no formulário)</li>
-                </ul>
-            </div>
-            
-            <div class="modal-buttons">
-                <button onclick="closeModal('help-modal')" class="btn-export">
-                    <i class="fas fa-check"></i> Entendi
-                </button>
-            </div>
-        </div>
-    </div>
-
-    <!-- MODAL SOBRE -->
-    <div id="about-modal" class="modal">
-        <div class="modal-content">
-            <h2><i class="fas fa-info-circle"></i> Sobre o Sistema</h2>
-            
-            <div class="tips">
-                <h3>Lista de Compras Inteligente</h3>
-                <p>Sistema completo para controle de gastos e análise financeira.</p>
-                
-                <h4 style="margin-top: 20px;">Funcionalidades:</h4>
-                <ul>
-                    <li>Controle completo de lista de compras</li>
-                    <li>Dashboard com gráficos interativos</li>
-                    <li>Análise de gastos por dia, semana e mês</li>
-                    <li>Categorização automática de produtos</li>
-                    <li>Backup e restauração de dados</li>
-                    <li>Exportação/importação em JSON</li>
-                    <li>Totalmente responsivo</li>
-                    <li>Funciona offline</li>
-                </ul>
-            </div>
-            
-            <div class="modal-buttons">
-                <button onclick="closeModal('about-modal')" class="btn-export">
-                    <i class="fas fa-check"></i> Fechar
-                </button>
-            </div>
-        </div>
-    </div>
-
     <script>
         // ========== INICIALIZAÇÃO ==========
         document.addEventListener('DOMContentLoaded', function() {
@@ -1113,15 +1024,27 @@
                     <td><strong style="color: #182848;">${formatCurrency(total)}</strong></td>
                     <td>
                         <div class="action-buttons">
-                            <button class="btn-edit" onclick="editProduct('${product.id}')">
+                            <button class="btn-edit" data-id="${product.id}">
                                 <i class="fas fa-edit"></i>
                             </button>
-                            <button class="btn-delete" onclick="deleteProduct('${product.id}')">
+                            <button class="btn-delete" data-id="${product.id}">
                                 <i class="fas fa-trash"></i>
                             </button>
                         </div>
                     </td>
                 `;
+                
+                // Adicionar event listeners para os botões
+                const editBtn = row.querySelector('.btn-edit');
+                const deleteBtn = row.querySelector('.btn-delete');
+                
+                editBtn.addEventListener('click', () => {
+                    editProduct(product.id);
+                });
+                
+                deleteBtn.addEventListener('click', () => {
+                    deleteProduct(product.id);
+                });
                 
                 listBody.appendChild(row);
             });
@@ -1199,36 +1122,47 @@
         });
 
         // ========== EDITAR PRODUTO ==========
-        window.editProduct = function(id) {
-            const product = shoppingList.find(item => item.id === id);
+        function editProduct(id) {
+            console.log('Editando produto com ID:', id);
             
-            if (!product) return;
+            const product = shoppingList.find(item => item.id.toString() === id.toString());
             
+            if (!product) {
+                showNotification('Produto não encontrado!', 'warning');
+                return;
+            }
+            
+            // Preencher formulário com dados do produto
             productName.value = product.name;
             productQuantity.value = product.quantity;
             productPrice.value = product.price;
             productCategory.value = product.category;
             
             // Remover produto da lista temporariamente
-            shoppingList = shoppingList.filter(item => item.id !== id);
+            shoppingList = shoppingList.filter(item => item.id.toString() !== id.toString());
             saveList();
             renderList();
             updateStats();
             
+            // Focar no campo de nome
             productName.focus();
+            
+            // Feedback
             showNotification('Produto carregado para edição. Edite os campos e clique em "Adicionar à Lista".', 'info');
-        };
+        }
 
         // ========== EXCLUIR PRODUTO ==========
-        window.deleteProduct = function(id) {
+        function deleteProduct(id) {
+            console.log('Excluindo produto com ID:', id);
+            
             if (confirm('Tem certeza que deseja remover este item da lista?')) {
-                shoppingList = shoppingList.filter(item => item.id !== id);
+                shoppingList = shoppingList.filter(item => item.id.toString() !== id.toString());
                 saveList();
                 renderList();
                 updateStats();
                 showNotification('Produto removido com sucesso!', 'warning');
             }
-        };
+        }
 
         // ========== LIMPAR TUDO ==========
         clearAllButton.addEventListener('click', function() {
@@ -1333,7 +1267,7 @@
             if (shoppingList.length === 0) {
                 if (confirm('Você ainda não tem dados de compras. Deseja adicionar dados de exemplo para testar o dashboard?')) {
                     addSampleData();
-                    // Criar dashboard inline ou em nova página
+                    // Criar dashboard inline
                     createInlineDashboard();
                 } else {
                     showNotification('Adicione alguns produtos primeiro para usar o dashboard.', 'info');
@@ -1631,102 +1565,6 @@
             showNotification('Dashboard exportado com sucesso!', 'success');
         }
 
-        // ========== MODAIS ==========
-        function showBackupModal() {
-            document.getElementById('backup-modal').style.display = 'flex';
-            updateBackupList();
-        }
-
-        function showHelp() {
-            document.getElementById('help-modal').style.display = 'flex';
-        }
-
-        function showAbout() {
-            document.getElementById('about-modal').style.display = 'flex';
-        }
-
-        function closeModal(modalId) {
-            document.getElementById(modalId).style.display = 'none';
-        }
-
-        function updateBackupList() {
-            const backupList = document.getElementById('backup-list');
-            const backups = [];
-            
-            // Listar todos os backups no localStorage
-            for (let i = 0; i < localStorage.length; i++) {
-                const key = localStorage.key(i);
-                if (key.includes('backup') || key.includes('Backup')) {
-                    try {
-                        const data = JSON.parse(localStorage.getItem(key));
-                        if (Array.isArray(data) || (data && data.shoppingList)) {
-                            backups.push({
-                                key: key,
-                                date: key.split('_').pop() || 'Data desconhecida',
-                                count: Array.isArray(data) ? data.length : data.shoppingList.length
-                            });
-                        }
-                    } catch (e) {
-                        // Ignorar
-                    }
-                }
-            }
-            
-            if (backups.length === 0) {
-                backupList.innerHTML = '<p>Nenhum backup encontrado.</p>';
-                return;
-            }
-            
-            let html = '<div style="max-height: 200px; overflow-y: auto;">';
-            backups.forEach(backup => {
-                html += `
-                    <div style="display: flex; justify-content: space-between; align-items: center; padding: 10px; border-bottom: 1px solid #eee;">
-                        <div>
-                            <strong>${backup.key}</strong><br>
-                            <small>${backup.count} itens</small>
-                        </div>
-                        <button onclick="restoreBackup('${backup.key}')" class="btn-edit" style="padding: 5px 10px; font-size: 0.8rem;">
-                            <i class="fas fa-undo"></i> Restaurar
-                        </button>
-                    </div>
-                `;
-            });
-            html += '</div>';
-            
-            backupList.innerHTML = html;
-        }
-
-        function createBackup() {
-            const backupKey = 'manual_backup_' + new Date().toISOString().replace(/[:.]/g, '-');
-            localStorage.setItem(backupKey, JSON.stringify(shoppingList));
-            showNotification('Backup criado com sucesso!', 'success');
-            updateBackupList();
-        }
-
-        function restoreBackup(backupKey) {
-            if (confirm('Deseja restaurar este backup? A lista atual será substituída.')) {
-                try {
-                    const data = JSON.parse(localStorage.getItem(backupKey));
-                    if (Array.isArray(data)) {
-                        shoppingList = data;
-                    } else if (data && data.shoppingList) {
-                        shoppingList = data.shoppingList;
-                    } else {
-                        throw new Error('Formato de backup inválido');
-                    }
-                    
-                    saveList();
-                    renderList();
-                    updateStats();
-                    showNotification('Backup restaurado com sucesso!', 'success');
-                    closeModal('backup-modal');
-                } catch (error) {
-                    showNotification('Erro ao restaurar backup.', 'warning');
-                    console.error('Erro:', error);
-                }
-            }
-        }
-
         // ========== DADOS DE EXEMPLO ==========
         function addSampleData() {
             const sampleProducts = [
@@ -1808,19 +1646,9 @@
                     console.log('Auto-save realizado');
                 }
             }, 30000);
-            
-            // Fechar modais clicando fora
-            document.querySelectorAll('.modal').forEach(modal => {
-                modal.addEventListener('click', function(e) {
-                    if (e.target === this) {
-                        this.style.display = 'none';
-                    }
-                });
-            });
         }
 
-        // ========== INICIALIZAÇÃO FINAL ==========
-        // Expor funções globais
+        // ========== EXPOR FUNÇÕES GLOBAIS ==========
         window.editProduct = editProduct;
         window.deleteProduct = deleteProduct;
         window.openDashboard = openDashboard;
